@@ -158,6 +158,9 @@ fun LoginScreen(navController: NavHostController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondScreen(navController: NavHostController, username: String) {
+    // Estado para controlar a abertura do menu dropdown
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -171,18 +174,55 @@ fun SecondScreen(navController: NavHostController, username: String) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        // Navegar para a página de perfil ao clicar no ícone de perfil
-                        navController.navigate("profile_screen/$username")
-                    }) {
-                        // Aqui substituí o ic_profile pela imagem do usuário logado (profile_icon)
-                        Image(
-                            painter = painterResource(id = R.drawable.profile_icon),
-                            contentDescription = "Perfil",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                        )
+                    // Ícone do perfil que, ao ser clicado, abre o DropdownMenu
+                    Box {
+                        IconButton(onClick = { showMenu = !showMenu }) {
+                            // Aqui substituí o ic_profile pela imagem do usuário logado (profile_icon)
+                            Image(
+                                painter = painterResource(id = R.drawable.profile_icon),
+                                contentDescription = "Perfil",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            )
+                        }
+
+                        // DropdownMenu que aparece quando o ícone de perfil é clicado
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false } // Fechar menu quando clicar fora
+                        ) {
+                            // Opção "Gerenciar Perfil"
+                            DropdownMenuItem(
+                                text = { Text("Gerenciar Perfil") }, // Aqui colocamos o Text como conteúdo do DropdownMenuItem
+                                onClick = {
+                                    // Navegar para a página de perfil
+                                    navController.navigate("profile_screen/$username")
+                                    showMenu = false // Fechar o menu
+                                }
+                            )
+
+                            // Opção "Trocar Conta"
+                            DropdownMenuItem(
+                                text = { Text("Trocar Conta") }, // Aqui colocamos o Text como conteúdo do DropdownMenuItem
+                                onClick = {
+                                    // Aqui você pode adicionar a lógica para trocar de conta
+                                    // Por exemplo, navegar para a tela de login novamente
+                                    navController.navigate("login_screen")
+                                    showMenu = false // Fechar o menu
+                                }
+                            )
+                            // Opção "Trocar Conta"
+                            DropdownMenuItem(
+                                text = { Text("Sair da Conta") }, // Aqui colocamos o Text como conteúdo do DropdownMenuItem
+                                onClick = {
+                                    // Aqui você pode adicionar a lógica para trocar de conta
+                                    // Por exemplo, navegar para a tela de login novamente
+                                    navController.navigate("login_screen")
+                                    showMenu = false // Fechar o menu
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -199,12 +239,21 @@ fun SecondScreen(navController: NavHostController, username: String) {
     }
 }
 
+
 // Tela de Perfil do Usuário
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavHostController, username: String) {
     // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
+
+    // Estado para controlar se o perfil está em modo de edição
+    var isEditing by remember { mutableStateOf(false) }
+
+    // Estado local para os campos de texto
+    var fullName by remember { mutableStateOf(userProfile.fullName) }
+    var email by remember { mutableStateOf(userProfile.email) }
+    var password by remember { mutableStateOf(userProfile.password) }
 
     Scaffold(
         topBar = {
@@ -223,11 +272,12 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        // Aqui você pode adicionar a lógica para editar o perfil
+                        // Alternar o modo de edição
+                        isEditing = !isEditing
                     }) {
                         Icon(
                             imageVector = Icons.Default.Edit, // Ícone de edição
-                            contentDescription = "Editar Perfil"
+                            contentDescription = if (isEditing) "Salvar" else "Editar Perfil"
                         )
                     }
                 }
@@ -262,10 +312,10 @@ fun ProfileScreen(navController: NavHostController, username: String) {
 
                 // Campo de nome completo
                 OutlinedTextField(
-                    value = userProfile.fullName, // Preencher com o nome completo do perfil
-                    onValueChange = {},
+                    value = fullName, // Preencher com o nome completo do perfil
+                    onValueChange = { fullName = it },
                     label = { Text("Nome Completo") },
-                    enabled = false, // Desativa a edição
+                    enabled = isEditing, // Habilita edição apenas se isEditing for true
                     colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -273,29 +323,29 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                 // Campo de nome de usuário
                 OutlinedTextField(
                     value = username, // Nome de usuário
-                    onValueChange = {},
+                    onValueChange = {}, // Nome de usuário não deve ser editável
                     label = { Text("Nome de Usuário") },
-                    enabled = false, // Desativa a edição
+                    enabled = false, // Sempre desabilitado
                     colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // Campo de email
                 OutlinedTextField(
-                    value = userProfile.email, // Preencher com o email do perfil
-                    onValueChange = {},
+                    value = email, // Preencher com o email do perfil
+                    onValueChange = { email = it },
                     label = { Text("Email") },
-                    enabled = false, // Desativa a edição
+                    enabled = isEditing, // Habilita edição apenas se isEditing for true
                     colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // Campo de senha
                 OutlinedTextField(
-                    value = userProfile.password, // Preencher com a senha do perfil
-                    onValueChange = {},
+                    value = password, // Preencher com a senha do perfil
+                    onValueChange = { password = it },
                     label = { Text("Senha") },
-                    enabled = false, // Desativa a edição
+                    enabled = isEditing, // Habilita edição apenas se isEditing for true
                     visualTransformation = PasswordVisualTransformation(),
                     colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
@@ -304,7 +354,6 @@ fun ProfileScreen(navController: NavHostController, username: String) {
         }
     }
 }
-
 
 data class Mensagem(val autor: String, val texto: String)
 
