@@ -48,8 +48,8 @@ class MainActivity : ComponentActivity() {
 
 // Mapa de usuários com nome completo, senha e email
 val userCredentials = mapOf(
-    "Lucas" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lucas@example.com"),
-    "Lorenna" to UserProfile("Lorenna Judit", "qwe123", "lorenna@example.com"),
+    "Lucas" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lk.serenato@example.com"),
+    "Lorenna" to UserProfile("Lorenna Judit", "qwe123", "lohve@example.com"),
     "Cesar" to UserProfile("Cesar Augusto", "senha", "cesar@example.com")
 )
 
@@ -202,7 +202,7 @@ fun SecondScreen(navController: NavHostController, username: String) {
 // Tela de Perfil do Usuário
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavHostController,username: String) {
+fun ProfileScreen(navController: NavHostController, username: String) {
     // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
 
@@ -252,11 +252,21 @@ fun ProfileScreen(navController: NavHostController,username: String) {
                         .size(100.dp)
                         .clip(CircleShape)
                 )
+
+                // Cores customizadas para os campos desabilitados
+                val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface, // Cor do texto quando desabilitado
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant, // Cor do rótulo quando desabilitado
+                    disabledBorderColor = MaterialTheme.colorScheme.onSurface // Cor da borda quando desabilitado
+                )
+
                 // Campo de nome completo
                 OutlinedTextField(
                     value = userProfile.fullName, // Preencher com o nome completo do perfil
                     onValueChange = {},
                     label = { Text("Nome Completo") },
+                    enabled = false, // Desativa a edição
+                    colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -265,6 +275,8 @@ fun ProfileScreen(navController: NavHostController,username: String) {
                     value = username, // Nome de usuário
                     onValueChange = {},
                     label = { Text("Nome de Usuário") },
+                    enabled = false, // Desativa a edição
+                    colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -273,6 +285,8 @@ fun ProfileScreen(navController: NavHostController,username: String) {
                     value = userProfile.email, // Preencher com o email do perfil
                     onValueChange = {},
                     label = { Text("Email") },
+                    enabled = false, // Desativa a edição
+                    colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -281,13 +295,16 @@ fun ProfileScreen(navController: NavHostController,username: String) {
                     value = userProfile.password, // Preencher com a senha do perfil
                     onValueChange = {},
                     label = { Text("Senha") },
+                    enabled = false, // Desativa a edição
                     visualTransformation = PasswordVisualTransformation(),
+                    colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
 }
+
 
 data class Mensagem(val autor: String, val texto: String)
 
