@@ -27,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import br.edu.up.test_app.ui.theme.Test_AppTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,11 +65,7 @@ data class UserProfile(
 @Composable
 fun NavigationComponent(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "login_screen") {
-        // Tela de Login
-        composable("login_screen") {
-            LoginScreen(navController)
-        }
-        // Segunda tela (Card) com argumento para o nome do usuário
+        composable("login_screen") { LoginScreen(navController) }
         composable(
             route = "second_screen/{username}",
             arguments = listOf(navArgument("username") { type = NavType.StringType })
@@ -76,16 +73,18 @@ fun NavigationComponent(navController: NavHostController) {
             val username = backStackEntry.arguments?.getString("username") ?: "Desconhecido"
             SecondScreen(navController, username)
         }
-        // Tela de Perfil do usuário
-        composable(
-            route = "profile_screen/{username}",
+        composable("profile_screen/{username}",
             arguments = listOf(navArgument("username") { type = NavType.StringType })
         ) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username") ?: "Desconhecido"
             ProfileScreen(navController, username)
         }
+        composable("tela_1") { Tela1Screen(navController) }
+        composable("tela_2") { Tela2Screen(navController) }
+        composable("tela_3") { Tela3Screen(navController) }
     }
 }
+
 
 // Tela de Login
 @Composable
@@ -158,86 +157,150 @@ fun LoginScreen(navController: NavHostController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondScreen(navController: NavHostController, username: String) {
-    // Estado para controlar a abertura do menu dropdown
-    var showMenu by remember { mutableStateOf(false) }
+    // Estado para controlar a abertura do drawer
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Pagina Inicial") },
-                navigationIcon = {
-                    IconButton(onClick = { /* Handle menu click */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Menu, // Ícone de menu padrão
-                            contentDescription = "Menu"
-                        )
-                    }
-                },
-                actions = {
-                    // Ícone do perfil que, ao ser clicado, abre o DropdownMenu
-                    Box {
-                        IconButton(onClick = { showMenu = !showMenu }) {
-                            // Aqui substituí o ic_profile pela imagem do usuário logado (profile_icon)
-                            Image(
-                                painter = painterResource(id = R.drawable.profile_icon),
-                                contentDescription = "Perfil",
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                            )
+    // Itens do drawer
+    val items = listOf("Tela 1", "Tela 2", "Tela 3")
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(Modifier.height(16.dp))
+                Text("Opções", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
+
+                items.forEach { item ->
+                    DropdownMenuItem(
+                        text = { Text(item) },
+                        onClick = {
+                            // Abrir a tela correspondente
+                            when (item) {
+                                "Tela 1" -> navController.navigate("tela_1")
+                                "Tela 2" -> navController.navigate("tela_2")
+                                "Tela 3" -> navController.navigate("tela_3")
+                            }
+                            coroutineScope.launch { drawerState.close() } // Fecha o drawer após o clique
                         }
-
-                        // DropdownMenu que aparece quando o ícone de perfil é clicado
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false } // Fechar menu quando clicar fora
-                        ) {
-                            // Opção "Gerenciar Perfil"
-                            DropdownMenuItem(
-                                text = { Text("Gerenciar Perfil") }, // Aqui colocamos o Text como conteúdo do DropdownMenuItem
-                                onClick = {
-                                    // Navegar para a página de perfil
-                                    navController.navigate("profile_screen/$username")
-                                    showMenu = false // Fechar o menu
-                                }
-                            )
-
-                            // Opção "Trocar Conta"
-                            DropdownMenuItem(
-                                text = { Text("Trocar Conta") }, // Aqui colocamos o Text como conteúdo do DropdownMenuItem
-                                onClick = {
-                                    // Aqui você pode adicionar a lógica para trocar de conta
-                                    // Por exemplo, navegar para a tela de login novamente
-                                    navController.navigate("login_screen")
-                                    showMenu = false // Fechar o menu
-                                }
-                            )
-                            // Opção "Trocar Conta"
-                            DropdownMenuItem(
-                                text = { Text("Sair da Conta") }, // Aqui colocamos o Text como conteúdo do DropdownMenuItem
-                                onClick = {
-                                    // Aqui você pode adicionar a lógica para trocar de conta
-                                    // Por exemplo, navegar para a tela de login novamente
-                                    navController.navigate("login_screen")
-                                    showMenu = false // Fechar o menu
-                                }
-                            )
-                        }
-                    }
+                    )
                 }
-            )
+            }
         }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            Card(Mensagem(username, "Olá, seja bem-vindo!"))
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Pagina Inicial") },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            // Abrir o drawer ao clicar no ícone do menu
+                            coroutineScope.launch { drawerState.open() }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu, // Ícone de menu padrão
+                                contentDescription = "Abrir Menu"
+                            )
+                        }
+                    },
+                    actions = {
+                        // Ícone do perfil que, ao ser clicado, abre o DropdownMenu
+                        Box {
+                            var showMenu by remember { mutableStateOf(false) }
+
+                            IconButton(onClick = { showMenu = !showMenu }) {
+                                // Aqui substituí o ic_profile pela imagem do usuário logado (profile_icon)
+                                Image(
+                                    painter = painterResource(id = R.drawable.profile_icon),
+                                    contentDescription = "Perfil",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                )
+                            }
+
+                            // DropdownMenu que aparece quando o ícone de perfil é clicado
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false } // Fechar menu quando clicar fora
+                            ) {
+                                // Opção "Gerenciar Perfil"
+                                DropdownMenuItem(
+                                    text = { Text("Gerenciar Perfil") },
+                                    onClick = {
+                                        // Navegar para a página de perfil
+                                        navController.navigate("profile_screen/$username")
+                                        showMenu = false // Fechar o menu
+                                    }
+                                )
+
+                                // Opção "Trocar Conta"
+                                DropdownMenuItem(
+                                    text = { Text("Trocar Conta") },
+                                    onClick = {
+                                        // Navegar para a tela de login novamente
+                                        navController.navigate("login_screen")
+                                        showMenu = false // Fechar o menu
+                                    }
+                                )
+
+                                // Opção "Sair da Conta"
+                                DropdownMenuItem(
+                                    text = { Text("Sair da Conta") },
+                                    onClick = {
+                                        // Aqui você pode adicionar a lógica para sair da conta
+                                        navController.navigate("login_screen")
+                                        showMenu = false // Fechar o menu
+                                    }
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(Mensagem(username, "Olá, seja bem-vindo!"))
+            }
         }
     }
 }
+
+@Composable
+fun Tela1Screen(navController: NavHostController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Esta é a Tela 1", style = MaterialTheme.typography.headlineLarge)
+    }
+}
+
+@Composable
+fun Tela2Screen(navController: NavHostController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Esta é a Tela 2", style = MaterialTheme.typography.headlineLarge)
+    }
+}
+
+@Composable
+fun Tela3Screen(navController: NavHostController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Esta é a Tela 3", style = MaterialTheme.typography.headlineLarge)
+    }
+}
+
 
 
 // Tela de Perfil do Usuário
