@@ -92,6 +92,7 @@ fun LoginScreen(navController: NavHostController) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -129,20 +130,27 @@ fun LoginScreen(navController: NavHostController) {
 
             // Mensagem de erro
             if (loginError) {
-                Text(text = "Usuário ou senha inválidos", color = MaterialTheme.colorScheme.error)
+                Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Botão de login
             Button(
                 onClick = {
-                    // Verifica se o nome de usuário e senha correspondem
-                    if (userCredentials.containsKey(username) && userCredentials[username]?.password == password) {
+                    // Valida os campos
+                    if (username.isEmpty()) {
+                        loginError = true
+                        errorMessage = "O campo usuário não pode estar vazio."
+                    } else if (password.isEmpty()) {
+                        loginError = true
+                        errorMessage = "O campo senha não pode estar vazio."
+                    } else if (userCredentials.containsKey(username) && userCredentials[username]?.password == password) {
                         loginError = false
                         // Navegar para a segunda tela passando o nome do usuário
                         navController.navigate("second_screen/$username")
                     } else {
                         loginError = true
+                        errorMessage = "Usuário ou senha inválidos."
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -271,37 +279,101 @@ fun SecondScreen(navController: NavHostController, username: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tela1Screen(navController: NavHostController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Esta é a Tela 1", style = MaterialTheme.typography.headlineLarge)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tela 1") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        // Voltar para a tela anterior (SecondScreen)
+                        navController.popBackStack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Esta é a Tela 1", style = MaterialTheme.typography.headlineLarge)
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tela2Screen(navController: NavHostController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Esta é a Tela 2", style = MaterialTheme.typography.headlineLarge)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tela 2") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        // Voltar para a tela anterior (SecondScreen)
+                        navController.popBackStack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Esta é a Tela 2", style = MaterialTheme.typography.headlineLarge)
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tela3Screen(navController: NavHostController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Esta é a Tela 3", style = MaterialTheme.typography.headlineLarge)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tela 3") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        // Voltar para a tela anterior (SecondScreen)
+                        navController.popBackStack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Esta é a Tela 3", style = MaterialTheme.typography.headlineLarge)
+        }
     }
 }
-
-
 
 // Tela de Perfil do Usuário
 @OptIn(ExperimentalMaterial3Api::class)
