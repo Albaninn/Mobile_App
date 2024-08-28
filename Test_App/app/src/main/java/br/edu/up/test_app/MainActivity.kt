@@ -48,10 +48,10 @@ class MainActivity : ComponentActivity() {
 }
 
 // Mapa de usuários com nome completo, senha e email
-val userCredentials = mapOf(
-    "Lucas" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lk.serenato@example.com"),
-    "Lorenna" to UserProfile("Lorenna Judit", "qwe123", "lohve@example.com"),
-    "Cesar" to UserProfile("Cesar Augusto", "senha", "cesar@example.com")
+val userCredentials = mutableMapOf(
+    "l.serenato" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lk.serenato@example.com"),
+    "lorenna.j" to UserProfile("Lorenna Judit", "qwe123", "lohve@example.com"),
+    "cesar.a" to UserProfile("Cesar Augusto", "senha", "cesar@example.com")
 )
 
 // Data class para armazenar as informações do perfil
@@ -64,7 +64,8 @@ data class UserProfile(
 // Composable para navegação
 @Composable
 fun NavigationComponent(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "login_screen") {
+    NavHost(navController = navController, startDestination = "registration_screen") {
+        composable("registration_screen") { RegistrationScreen(navController) }
         composable("login_screen") { LoginScreen(navController) }
         composable(
             route = "second_screen/{username}",
@@ -85,6 +86,130 @@ fun NavigationComponent(navController: NavHostController) {
     }
 }
 
+@Composable
+fun RegistrationScreen(navController: NavHostController) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var isRegistering by remember { mutableStateOf(false) } // Controle para exibir campos de cadastro
+    var errorMessage by remember { mutableStateOf("") }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = "Bem-vindo", style = MaterialTheme.typography.headlineLarge)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo de nome de usuário
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Usuário") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo de senha
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Senha") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Mostrar os campos de nome completo e email ao clicar no botão de cadastro
+            if (isRegistering) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Campo de nome completo
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = { Text("Nome Completo") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Campo de email
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Mensagem de erro
+            if (errorMessage.isNotEmpty()) {
+                Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Botões lado a lado
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        if (isRegistering) {
+                            // Valida os campos de cadastro
+                            when {
+                                fullName.isEmpty() -> errorMessage = "O campo nome completo não pode estar vazio."
+                                email.isEmpty() -> errorMessage = "O campo email não pode estar vazio."
+                                username.isEmpty() -> errorMessage = "O campo usuário não pode estar vazio."
+                                password.isEmpty() -> errorMessage = "O campo senha não pode estar vazio."
+                                else -> {
+                                    errorMessage = ""
+                                    // Adicionar o usuário à base de dados (simulação)
+                                    userCredentials[username] = UserProfile(fullName, password, email)
+                                    navController.navigate("second_screen/$username")
+                                }
+                            }
+                        } else {
+                            // Validação para login
+                            when {
+                                username.isEmpty() -> errorMessage = "O campo usuário não pode estar vazio."
+                                password.isEmpty() -> errorMessage = "O campo senha não pode estar vazio."
+                                userCredentials.containsKey(username) && userCredentials[username]?.password == password -> {
+                                    errorMessage = ""
+                                    // Navegar para a segunda tela passando o nome do usuário
+                                    navController.navigate("second_screen/$username")
+                                }
+                                else -> errorMessage = "Usuário ou senha inválidos."
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f) // Ocupa metade da linha
+                ) {
+                    Text(text = if (isRegistering) "Cadastrar" else "Entrar")
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = { isRegistering = !isRegistering }, // Alterna o modo de cadastro
+                    modifier = Modifier.weight(1f) // Ocupa metade da linha
+                ) {
+                    Text(text = if (isRegistering) "Cancelar" else "Cadastro")
+                }
+            }
+        }
+    }
+}
 
 // Tela de Login
 @Composable
@@ -257,7 +382,7 @@ fun SecondScreen(navController: NavHostController, username: String) {
                                     text = { Text("Sair da Conta") },
                                     onClick = {
                                         // Aqui você pode adicionar a lógica para sair da conta
-                                        navController.navigate("login_screen")
+                                        navController.navigate("registration_screen")
                                         showMenu = false // Fechar o menu
                                     }
                                 )
