@@ -4,11 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
@@ -33,19 +33,29 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Test_AppTheme {
-                val navController = rememberNavController()
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // Configuração da Navegação
-                    NavigationComponent(navController)
-                }
-            }
+            MyApp()
         }
     }
 }
+
+@Composable
+fun MyApp() {
+    // Detecta o tema do sistema na primeira inicialização
+    val isSystemDarkTheme = isSystemInDarkTheme()
+    var isDarkTheme by remember { mutableStateOf(isSystemDarkTheme) }
+
+    Test_AppTheme(darkTheme = isDarkTheme) {
+        val navController = rememberNavController()
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            // Configuração da Navegação
+            NavigationComponent(navController, isDarkTheme, onThemeChange = { isDarkTheme = it })
+        }
+    }
+}
+
 
 // Mapa de usuários com nome completo, senha e email
 val userCredentials = mutableMapOf(
@@ -63,7 +73,7 @@ data class UserProfile(
 
 // Composable para navegação
 @Composable
-fun NavigationComponent(navController: NavHostController) {
+fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     NavHost(navController = navController, startDestination = "registration_screen") {
         composable("registration_screen") { RegistrationScreen(navController) }
         composable("login_screen") { LoginScreen(navController) }
@@ -72,7 +82,7 @@ fun NavigationComponent(navController: NavHostController) {
             arguments = listOf(navArgument("username") { type = NavType.StringType })
         ) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username") ?: "Desconhecido"
-            SecondScreen(navController, username)
+            SecondScreen(navController, username, isDarkTheme = isDarkTheme, onThemeChange)
         }
         composable("profile_screen/{username}",
             arguments = listOf(navArgument("username") { type = NavType.StringType })
@@ -289,7 +299,7 @@ fun LoginScreen(navController: NavHostController) {
 // Segunda Tela (onde está o Card)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecondScreen(navController: NavHostController, username: String) {
+fun SecondScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
 
@@ -373,9 +383,31 @@ fun SecondScreen(navController: NavHostController, username: String) {
                                     }
                                 )
 
+                                // Adiciona um Spacer para separar as opções anteriores
+                                Spacer(Modifier.height(8.dp))
+
+                                // Adiciona o switch para alternar o tema
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(text = "Modo Escuro", style = MaterialTheme.typography.bodySmall) // Texto menor
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            Switch(
+                                                checked = isDarkTheme,
+                                                onCheckedChange = { onThemeChange(it) },
+                                                modifier = Modifier.size(32.dp, 16.dp) // Diminui o tamanho do Switch
+                                            )
+                                        }
+                                    },
+                                    onClick = {} // Não faz nada ao clicar, já que o Switch é o controle principal
+                                )
+
                                 // Opção "Trocar Conta"
                                 DropdownMenuItem(
-                                    text = { Text("Trocar Conta") },
+                                    text = { Text("Trocar Conta", style = MaterialTheme.typography.bodySmall) }, // Texto menor
                                     onClick = {
                                         navController.navigate("login_screen")
                                         showMenu = false // Fechar o menu
@@ -384,7 +416,7 @@ fun SecondScreen(navController: NavHostController, username: String) {
 
                                 // Opção "Sair da Conta" - Agora redireciona para a tela de cadastro
                                 DropdownMenuItem(
-                                    text = { Text("Sair da Conta") },
+                                    text = { Text("Sair da Conta", style = MaterialTheme.typography.bodySmall) }, // Texto menor
                                     onClick = {
                                         navController.navigate("registration_screen")
                                         showMenu = false // Fechar o menu
@@ -408,7 +440,6 @@ fun SecondScreen(navController: NavHostController, username: String) {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tela1Screen(navController: NavHostController) {
@@ -650,10 +681,4 @@ fun LoginScreenPreview() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun SecondScreenPreview() {
-    Test_AppTheme {
-        SecondScreen(rememberNavController(), "Lucas")
-    }
-}
+
