@@ -290,6 +290,12 @@ fun LoginScreen(navController: NavHostController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondScreen(navController: NavHostController, username: String) {
+    // Buscar as informações do usuário a partir do mapa userCredentials
+    val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
+
+    // Extrair o primeiro nome do fullName
+    val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
+
     // Estado para controlar a abertura do drawer
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -324,7 +330,7 @@ fun SecondScreen(navController: NavHostController, username: String) {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Pagina Inicial") },
+                    title = { Text("Página Inicial") },
                     navigationIcon = {
                         IconButton(onClick = {
                             // Abrir o drawer ao clicar no ícone do menu
@@ -371,17 +377,15 @@ fun SecondScreen(navController: NavHostController, username: String) {
                                 DropdownMenuItem(
                                     text = { Text("Trocar Conta") },
                                     onClick = {
-                                        // Navegar para a tela de login novamente
                                         navController.navigate("login_screen")
                                         showMenu = false // Fechar o menu
                                     }
                                 )
 
-                                // Opção "Sair da Conta"
+                                // Opção "Sair da Conta" - Agora redireciona para a tela de cadastro
                                 DropdownMenuItem(
                                     text = { Text("Sair da Conta") },
                                     onClick = {
-                                        // Aqui você pode adicionar a lógica para sair da conta
                                         navController.navigate("registration_screen")
                                         showMenu = false // Fechar o menu
                                     }
@@ -398,7 +402,8 @@ fun SecondScreen(navController: NavHostController, username: String) {
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Card(Mensagem(username, "Olá, seja bem-vindo!"))
+                // Exibe o cartão com a mensagem de boas-vindas
+                Card(Mensagem(firstName, "Olá, seja bem-vindo!"))
             }
         }
     }
@@ -507,6 +512,9 @@ fun ProfileScreen(navController: NavHostController, username: String) {
     // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
 
+    // Extrair o primeiro nome do fullName
+    val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
+
     // Estado para controlar se o perfil está em modo de edição
     var isEditing by remember { mutableStateOf(false) }
 
@@ -515,14 +523,20 @@ fun ProfileScreen(navController: NavHostController, username: String) {
     var email by remember { mutableStateOf(userProfile.email) }
     var password by remember { mutableStateOf(userProfile.password) }
 
+    // Cores customizadas para os campos desabilitados
+    val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
+        disabledTextColor = MaterialTheme.colorScheme.onSurface, // Cor do texto quando desabilitado
+        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant, // Cor do rótulo quando desabilitado
+        disabledBorderColor = MaterialTheme.colorScheme.onSurface // Cor da borda quando desabilitado
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Perfil de $username") },
+                title = { Text("Perfil de $firstName") }, // Mostra o primeiro nome
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Voltar para a segunda tela
-                        navController.popBackStack() // Isso remove a tela atual da pilha de navegação e volta
+                        navController.popBackStack() // Voltar para a tela anterior
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack, // Ícone de seta para voltar
@@ -532,8 +546,7 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        // Alternar o modo de edição
-                        isEditing = !isEditing
+                        isEditing = !isEditing // Alternar o modo de edição
                     }) {
                         Icon(
                             imageVector = Icons.Default.Edit, // Ícone de edição
@@ -563,16 +576,9 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                         .clip(CircleShape)
                 )
 
-                // Cores customizadas para os campos desabilitados
-                val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface, // Cor do texto quando desabilitado
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant, // Cor do rótulo quando desabilitado
-                    disabledBorderColor = MaterialTheme.colorScheme.onSurface // Cor da borda quando desabilitado
-                )
-
                 // Campo de nome completo
                 OutlinedTextField(
-                    value = fullName, // Preencher com o nome completo do perfil
+                    value = fullName,
                     onValueChange = { fullName = it },
                     label = { Text("Nome Completo") },
                     enabled = isEditing, // Habilita edição apenas se isEditing for true
@@ -580,19 +586,19 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Campo de nome de usuário
+                // Campo de nome de usuário (não editável)
                 OutlinedTextField(
-                    value = username, // Nome de usuário
-                    onValueChange = {}, // Nome de usuário não deve ser editável
+                    value = username,
+                    onValueChange = {},
                     label = { Text("Nome de Usuário") },
-                    enabled = false, // Sempre desabilitado
+                    enabled = false,
                     colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 // Campo de email
                 OutlinedTextField(
-                    value = email, // Preencher com o email do perfil
+                    value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     enabled = isEditing, // Habilita edição apenas se isEditing for true
@@ -602,7 +608,7 @@ fun ProfileScreen(navController: NavHostController, username: String) {
 
                 // Campo de senha
                 OutlinedTextField(
-                    value = password, // Preencher com a senha do perfil
+                    value = password,
                     onValueChange = { password = it },
                     label = { Text("Senha") },
                     enabled = isEditing, // Habilita edição apenas se isEditing for true
