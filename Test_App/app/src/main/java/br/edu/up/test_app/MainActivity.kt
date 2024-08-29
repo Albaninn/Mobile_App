@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -398,7 +399,7 @@ fun SecondScreen(navController: NavHostController, username: String, isDarkTheme
                                             Switch(
                                                 checked = isDarkTheme,
                                                 onCheckedChange = { onThemeChange(it) },
-                                                modifier = Modifier.size(32.dp, 16.dp) // Diminui o tamanho do Switch
+                                                modifier = Modifier.scale(0.7f) // Escala o switch para 70% do tamanho original
                                             )
                                         }
                                     },
