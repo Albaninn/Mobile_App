@@ -60,16 +60,18 @@ fun MyApp() {
 
 // Mapa de usuários com nome completo, senha e email
 val userCredentials = mutableMapOf(
-    "l.serenato" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lk.serenato@example.com"),
-    "lorenna.j" to UserProfile("Lorenna Judit", "qwe123", "lohve@example.com"),
-    "cesar.a" to UserProfile("Cesar Augusto", "senha", "cesar@example.com")
+    "l.serenato" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lk.serenato@example.com","adm"),
+    "lorenna.j" to UserProfile("Lorenna Judit", "qwe123", "lohve@example.com","user"),
+    "cesar.a" to UserProfile("Cesar Augusto Serenato", "senha", "cesar@example.com","coord"),
+    "mirian.a" to UserProfile("Mirian Albano Ribas", "senha", "mirian@example.com","user")
 )
 
 // Data class para armazenar as informações do perfil
 data class UserProfile(
     val fullName: String,
     val password: String,
-    val email: String
+    val email: String,
+    val accessLevel: String
 )
 
 // Composable para navegação
@@ -103,6 +105,7 @@ fun RegistrationScreen(navController: NavHostController) {
     var password by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var accessLevel by remember { mutableStateOf("user") }
     var isRegistering by remember { mutableStateOf(false) } // Controle para exibir campos de cadastro
     var errorMessage by remember { mutableStateOf("") }
 
@@ -186,7 +189,7 @@ fun RegistrationScreen(navController: NavHostController) {
                                 else -> {
                                     errorMessage = ""
                                     // Adicionar o usuário à base de dados (simulação)
-                                    userCredentials[username] = UserProfile(fullName, password, email)
+                                    userCredentials[username] = UserProfile(fullName, password, email, accessLevel)
                                     navController.navigate("second_screen/$username")
                                 }
                             }
@@ -302,7 +305,7 @@ fun LoginScreen(navController: NavHostController) {
 @Composable
 fun SecondScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     // Buscar as informações do usuário a partir do mapa userCredentials
-    val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
+    val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "", "")
 
     // Extrair o primeiro nome do fullName
     val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
@@ -542,7 +545,7 @@ fun Tela3Screen(navController: NavHostController) {
 @Composable
 fun ProfileScreen(navController: NavHostController, username: String) {
     // Buscar as informações do usuário a partir do mapa userCredentials
-    val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "")
+    val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "", "")
 
     // Extrair o primeiro nome do fullName
     val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
