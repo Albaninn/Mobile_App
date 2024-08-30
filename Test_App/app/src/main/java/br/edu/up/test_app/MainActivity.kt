@@ -557,6 +557,7 @@ fun ProfileScreen(navController: NavHostController, username: String) {
     var fullName by remember { mutableStateOf(userProfile.fullName) }
     var email by remember { mutableStateOf(userProfile.email) }
     var password by remember { mutableStateOf(userProfile.password) }
+    val accessLevel = userProfile.accessLevel // Nível de acesso é sempre não editável
 
     // Cores customizadas para os campos desabilitados
     val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
@@ -648,6 +649,16 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                     label = { Text("Senha") },
                     enabled = isEditing, // Habilita edição apenas se isEditing for true
                     visualTransformation = PasswordVisualTransformation(),
+                    colors = customTextFieldColors, // Define as cores customizadas
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Campo de nível de acesso (não editável)
+                OutlinedTextField(
+                    value = accessLevel,
+                    onValueChange = {},
+                    label = { Text("Nível de Acesso") },
+                    enabled = false, // Não pode ser editado
                     colors = customTextFieldColors, // Define as cores customizadas
                     modifier = Modifier.fillMaxWidth()
                 )
