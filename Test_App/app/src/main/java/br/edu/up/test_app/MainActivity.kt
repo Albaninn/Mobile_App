@@ -1,8 +1,10 @@
 package br.edu.up.test_app
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -29,8 +31,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import br.edu.up.test_app.ui.theme.Test_AppTheme
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -39,6 +46,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyApp() {
     // Detecta o tema do sistema na primeira inicialização
@@ -74,7 +82,91 @@ data class UserProfile(
     val accessLevel: String
 )
 
+// Mapa de horas trabalhadas por usuário
+val workHours = mutableMapOf(
+    "l.serenato" to mutableListOf(
+        WorkDay("16/08/2024", "07:48", "18:02"),
+        WorkDay("17/08/2024", "08:00", "12:00")
+    ),
+    "lorenna.j" to mutableListOf(
+        WorkDay("16/08/2024", "08:15", "17:30")
+    )
+)
+
+// Definição da data class WorkDay com cálculo automático de horas e dia da semana
+data class WorkDay(
+    val date: String,
+    val entryTime: String,
+    val exitTime: String
+) {
+    // Calcula o dia da semana baseado na data
+    @RequiresApi(Build.VERSION_CODES.O)
+    val dayOfWeek: String = calculateDayOfWeek(date)
+
+    // Calcula as horas totais trabalhadas
+    @RequiresApi(Build.VERSION_CODES.O)
+    val totalHours: String = calculateTotalHours(entryTime, exitTime)
+
+    // Considera 8 horas como jornada padrão
+    @RequiresApi(Build.VERSION_CODES.O)
+    val credit: String = calculateCredit(totalHours)
+    @RequiresApi(Build.VERSION_CODES.O)
+    val debit: String = calculateDebit(totalHours)
+
+    // Função para calcular o dia da semana
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateDayOfWeek(date: String): String {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val localDate = LocalDate.parse(date, formatter)
+        return localDate.dayOfWeek.toString().lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+    // Função para calcular horas totais
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateTotalHours(entryTime: String, exitTime: String): String {
+        val entry = LocalTime.parse(entryTime)
+        val exit = LocalTime.parse(exitTime)
+        val totalMinutes = ChronoUnit.MINUTES.between(entry, exit)
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return "%02d:%02d".format(hours, minutes)
+    }
+
+    // Função para calcular crédito
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateCredit(totalHours: String): String {
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        val total = LocalTime.parse(totalHours, formatter)
+        val standard = LocalTime.of(8, 0) // Jornada padrão de 8 horas
+        return if (total.isAfter(standard)) {
+            val extraMinutes = ChronoUnit.MINUTES.between(standard, total)
+            val hours = extraMinutes / 60
+            val minutes = extraMinutes % 60
+            "%02d:%02d".format(hours, minutes)
+        } else {
+            "00:00"
+        }
+    }
+
+    // Função para calcular débito
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateDebit(totalHours: String): String {
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        val total = LocalTime.parse(totalHours, formatter)
+        val standard = LocalTime.of(8, 0) // Jornada padrão de 8 horas
+        return if (total.isBefore(standard)) {
+            val deficitMinutes = ChronoUnit.MINUTES.between(total, standard)
+            val hours = deficitMinutes / 60
+            val minutes = deficitMinutes % 60
+            "%02d:%02d".format(hours, minutes)
+        } else {
+            "00:00"
+        }
+    }
+}
+
 // Composable para navegação
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     NavHost(navController = navController, startDestination = "registration_screen") {
@@ -94,7 +186,13 @@ fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, 
             ProfileScreen(navController, username)
         }
         composable("tela_1") { Tela1Screen(navController) }
-        composable("tela_2") { Tela2Screen(navController) }
+        composable(
+            route = "tela_2/{username}",
+            arguments = listOf(navArgument("username") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val username = backStackEntry.arguments?.getString("username") ?: "Desconhecido"
+            Tela2Screen(navController, username)
+        }
         composable("tela_3") { Tela3Screen(navController) }
     }
 }
@@ -315,7 +413,12 @@ fun SecondScreen(navController: NavHostController, username: String, isDarkTheme
     val coroutineScope = rememberCoroutineScope()
 
     // Itens do drawer
-    val items = listOf("Tela 1", "Tela 2", "Tela 3")
+    val items = mutableListOf("Tela 2", "Tela 3") // Inicialmente só incluem as telas acessíveis a todos
+
+    // Adicionar "Tela 1" se o nível de acesso for "adm"
+    if (userProfile.accessLevel == "adm") {
+        items.add(0, "Tela 1") // Adiciona "Tela 1" ao topo da lista
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -331,7 +434,7 @@ fun SecondScreen(navController: NavHostController, username: String, isDarkTheme
                             // Abrir a tela correspondente
                             when (item) {
                                 "Tela 1" -> navController.navigate("tela_1")
-                                "Tela 2" -> navController.navigate("tela_2")
+                                "Consulta de Hora" -> navController.navigate("tela_2/$username")
                                 "Tela 3" -> navController.navigate("tela_3")
                             }
                             coroutineScope.launch { drawerState.close() } // Fecha o drawer após o clique
@@ -444,6 +547,7 @@ fun SecondScreen(navController: NavHostController, username: String, isDarkTheme
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tela1Screen(navController: NavHostController) {
@@ -476,16 +580,16 @@ fun Tela1Screen(navController: NavHostController) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Tela2Screen(navController: NavHostController) {
+fun Tela2Screen(navController: NavHostController, username: String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tela 2") },
+                title = { Text("Consulta Banco de Horas") },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Voltar para a tela anterior (SecondScreen)
                         navController.popBackStack()
                     }) {
                         Icon(
@@ -500,12 +604,82 @@ fun Tela2Screen(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
+                .padding(padding)
         ) {
-            Text("Esta é a Tela 2", style = MaterialTheme.typography.headlineLarge)
+            // Exibir a lista de registros de banco de horas do usuário logado
+            WorkHoursList(username = username)
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WorkHoursList(username: String) {
+    // Filtra os registros para o usuário logado
+    val workDays = workHours[username] ?: emptyList()
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        workDays.forEach { workDay ->
+            WorkDayItem(workDay)
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WorkDayItem(workDay: WorkDay) {
+    // Calcula as situações (horas totais, crédito, débito)
+    val totalHours = workDay.totalHours
+    val credit = workDay.credit
+    val debit = workDay.debit
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Data e dia da semana
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(text = workDay.date, style = MaterialTheme.typography.bodyMedium)
+            Text(text = workDay.dayOfWeek, style = MaterialTheme.typography.bodySmall)
+        }
+
+        // Horário
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        // Marcações (Entrada e Saída)
+        Column(
+            modifier = Modifier.weight(2f)
+        ) {
+            Text(text = "${workDay.entryTime} - ${workDay.exitTime}", style = MaterialTheme.typography.bodyMedium)
+        }
+
+        // Situações (Trabalhadas, Crédito, Débito)
+        Column(
+            modifier = Modifier.weight(2f)
+        ) {
+            Text(
+                text = "$totalHours - 1 Trabalhando",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = if (credit != "00:00") "$credit Crédito Banco de Horas" else "$debit Débito Banco de Horas",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        }
+    }
+
+    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
