@@ -20,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -31,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import br.edu.up.test_app.ui.theme.Test_AppTheme
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -83,6 +86,7 @@ data class UserProfile(
 )
 
 // Mapa de horas trabalhadas por usuário
+@RequiresApi(Build.VERSION_CODES.O)
 val workHours = mutableMapOf(
     "l.serenato" to mutableListOf(
         WorkDay("16/08/2024", "07:48", "18:02"),
@@ -92,78 +96,6 @@ val workHours = mutableMapOf(
         WorkDay("16/08/2024", "08:15", "17:30")
     )
 )
-
-// Definição da data class WorkDay com cálculo automático de horas e dia da semana
-data class WorkDay(
-    val date: String,
-    val entryTime: String,
-    val exitTime: String
-) {
-    // Calcula o dia da semana baseado na data
-    @RequiresApi(Build.VERSION_CODES.O)
-    val dayOfWeek: String = calculateDayOfWeek(date)
-
-    // Calcula as horas totais trabalhadas
-    @RequiresApi(Build.VERSION_CODES.O)
-    val totalHours: String = calculateTotalHours(entryTime, exitTime)
-
-    // Considera 8 horas como jornada padrão
-    @RequiresApi(Build.VERSION_CODES.O)
-    val credit: String = calculateCredit(totalHours)
-    @RequiresApi(Build.VERSION_CODES.O)
-    val debit: String = calculateDebit(totalHours)
-
-    // Função para calcular o dia da semana
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateDayOfWeek(date: String): String {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val localDate = LocalDate.parse(date, formatter)
-        return localDate.dayOfWeek.toString().lowercase().replaceFirstChar { it.uppercase() }
-    }
-
-    // Função para calcular horas totais
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateTotalHours(entryTime: String, exitTime: String): String {
-        val entry = LocalTime.parse(entryTime)
-        val exit = LocalTime.parse(exitTime)
-        val totalMinutes = ChronoUnit.MINUTES.between(entry, exit)
-        val hours = totalMinutes / 60
-        val minutes = totalMinutes % 60
-        return "%02d:%02d".format(hours, minutes)
-    }
-
-    // Função para calcular crédito
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateCredit(totalHours: String): String {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val total = LocalTime.parse(totalHours, formatter)
-        val standard = LocalTime.of(8, 0) // Jornada padrão de 8 horas
-        return if (total.isAfter(standard)) {
-            val extraMinutes = ChronoUnit.MINUTES.between(standard, total)
-            val hours = extraMinutes / 60
-            val minutes = extraMinutes % 60
-            "%02d:%02d".format(hours, minutes)
-        } else {
-            "00:00"
-        }
-    }
-
-    // Função para calcular débito
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateDebit(totalHours: String): String {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val total = LocalTime.parse(totalHours, formatter)
-        val standard = LocalTime.of(8, 0) // Jornada padrão de 8 horas
-        return if (total.isBefore(standard)) {
-            val deficitMinutes = ChronoUnit.MINUTES.between(total, standard)
-            val hours = deficitMinutes / 60
-            val minutes = deficitMinutes % 60
-            "%02d:%02d".format(hours, minutes)
-        } else {
-            "00:00"
-        }
-    }
-}
 
 // Composable para navegação
 @RequiresApi(Build.VERSION_CODES.O)
@@ -177,7 +109,7 @@ fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, 
             arguments = listOf(navArgument("username") { type = NavType.StringType })
         ) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username") ?: "Desconhecido"
-            SecondScreen(navController, username, isDarkTheme = isDarkTheme, onThemeChange)
+            MainScreen(navController, username, isDarkTheme = isDarkTheme, onThemeChange)
         }
         composable("profile_screen/{username}",
             arguments = listOf(navArgument("username") { type = NavType.StringType })
@@ -398,10 +330,10 @@ fun LoginScreen(navController: NavHostController) {
     }
 }
 
-// Segunda Tela (onde está o Card)
+// Tela Principal (onde está o Card)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecondScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
+fun MainScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "", "")
 
@@ -413,11 +345,11 @@ fun SecondScreen(navController: NavHostController, username: String, isDarkTheme
     val coroutineScope = rememberCoroutineScope()
 
     // Itens do drawer
-    val items = mutableListOf("Tela 2", "Tela 3") // Inicialmente só incluem as telas acessíveis a todos
+    val items = mutableListOf("Consulta de Hora", "Tela 3") // Inicialmente só incluem as telas acessíveis a todos
 
     // Adicionar "Tela 1" se o nível de acesso for "adm"
     if (userProfile.accessLevel == "adm") {
-        items.add(0, "Tela 1") // Adiciona "Tela 1" ao topo da lista
+        items.add(0, "Tela administrativa") // Adiciona "Tela 1" ao topo da lista
     }
 
     ModalNavigationDrawer(
@@ -433,7 +365,7 @@ fun SecondScreen(navController: NavHostController, username: String, isDarkTheme
                         onClick = {
                             // Abrir a tela correspondente
                             when (item) {
-                                "Tela 1" -> navController.navigate("tela_1")
+                                "Tela administrativa" -> navController.navigate("tela_1")
                                 "Consulta de Hora" -> navController.navigate("tela_2/$username")
                                 "Tela 3" -> navController.navigate("tela_3")
                             }
@@ -630,8 +562,8 @@ fun WorkHoursList(username: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay) {
-    // Calcula as situações (horas totais, crédito, débito)
-    val totalHours = workDay.totalHours
+    // Calcula as situações (horas totais ajustadas, crédito, débito)
+    val totalHours = workDay.totalAdjustedHours // Total de horas ajustado (-1h para almoço)
     val credit = workDay.credit
     val debit = workDay.debit
 
@@ -641,45 +573,124 @@ fun WorkDayItem(workDay: WorkDay) {
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Data e dia da semana
+        // Primeira Coluna: Data e dia da semana
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
         ) {
-            Text(text = workDay.date, style = MaterialTheme.typography.bodyMedium)
-            Text(text = workDay.dayOfWeek, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = workDay.date,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+            )
+            Text(
+                text = workDay.dayOfWeek,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+            )
         }
 
-        // Horário
+        // Segunda Coluna: Marcações (Entrada e Saída)
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(2f)
+                .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
         ) {
-            Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "${workDay.entryTime} - ${workDay.exitTime}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+            )
         }
 
-        // Marcações (Entrada e Saída)
+        // Terceira Coluna: Situações (Trabalhadas, Crédito, Débito)
         Column(
-            modifier = Modifier.weight(2f)
-        ) {
-            Text(text = "${workDay.entryTime} - ${workDay.exitTime}", style = MaterialTheme.typography.bodyMedium)
-        }
-
-        // Situações (Trabalhadas, Crédito, Débito)
-        Column(
-            modifier = Modifier.weight(2f)
+            modifier = Modifier
+                .weight(2f)
+                .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
         ) {
             Text(
                 text = "$totalHours - 1 Trabalhando",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
             )
             Text(
-                text = if (credit != "00:00") "$credit Crédito Banco de Horas" else "$debit Débito Banco de Horas",
+                text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
             )
         }
     }
 
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+}
+
+
+// Modificações na data class WorkDay para ajustar as horas de trabalho e calcular o crédito/débito:
+@RequiresApi(Build.VERSION_CODES.O)
+data class WorkDay(
+    val date: String,
+    val entryTime: String,
+    val exitTime: String
+) {
+    val dayOfWeek: String = calculateDayOfWeek(date)
+
+    // Calcula as horas totais ajustadas (-1h para almoço)
+    @RequiresApi(Build.VERSION_CODES.O)
+    val totalAdjustedHours: String = calculateTotalAdjustedHours(entryTime, exitTime)
+
+    // Considera 9 horas como jornada padrão de segunda a quinta e 8 horas na sexta
+    @RequiresApi(Build.VERSION_CODES.O)
+    val credit: String = calculateCredit(totalAdjustedHours)
+    @RequiresApi(Build.VERSION_CODES.O)
+    val debit: String = calculateDebit(totalAdjustedHours)
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateTotalAdjustedHours(entryTime: String, exitTime: String): String {
+        val entry = LocalTime.parse(entryTime)
+        val exit = LocalTime.parse(exitTime)
+        val totalMinutes = ChronoUnit.MINUTES.between(entry, exit) - 60 // Subtrai 60 minutos (1 hora de almoço)
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return "%02d:%02d".format(hours, minutes)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateCredit(totalHours: String): String {
+        val total = LocalTime.parse(totalHours)
+        val standardHours = if (dayOfWeek == "sexta-feira") LocalTime.of(8, 0) else LocalTime.of(9, 0)
+        return if (total.isAfter(standardHours)) {
+            val extraMinutes = ChronoUnit.MINUTES.between(standardHours, total)
+            val hours = extraMinutes / 60
+            val minutes = extraMinutes % 60
+            "%02d:%02d".format(hours, minutes)
+        } else {
+            "00:00"
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateDebit(totalHours: String): String {
+        val total = LocalTime.parse(totalHours)
+        val standardHours = if (dayOfWeek == "sexta-feira") LocalTime.of(8, 0) else LocalTime.of(9, 0)
+        return if (total.isBefore(standardHours)) {
+            val deficitMinutes = ChronoUnit.MINUTES.between(total, standardHours)
+            val hours = deficitMinutes / 60
+            val minutes = deficitMinutes % 60
+            "%02d:%02d".format(hours, minutes)
+        } else {
+            "00:00"
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateDayOfWeek(date: String): String {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val localDate = LocalDate.parse(date, formatter)
+        return localDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
