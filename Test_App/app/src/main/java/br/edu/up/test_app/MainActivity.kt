@@ -90,7 +90,10 @@ data class UserProfile(
 val workHours = mutableMapOf(
     "l.serenato" to mutableListOf(
         WorkDay("16/08/2024", "07:48", "18:02"),
-        WorkDay("17/08/2024", "08:00", "12:00")
+        WorkDay("14/08/2024", "07:58", "18:00"),
+        WorkDay("13/08/2024", "07:38", "17:20"),
+        WorkDay("12/08/2024", "07:45", "18:00"),
+        WorkDay("15/08/2024", "08:00", "12:00")
     ),
     "lorenna.j" to mutableListOf(
         WorkDay("16/08/2024", "08:15", "17:30")
@@ -547,8 +550,10 @@ fun Tela2Screen(navController: NavHostController, username: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkHoursList(username: String) {
-    // Filtra os registros para o usuário logado
-    val workDays = workHours[username] ?: emptyList()
+    // Filtra e ordena os registros para o usuário logado por data, do mais recente para o mais antigo
+    val workDays = workHours[username]?.sortedByDescending {
+        LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    } ?: emptyList()
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -576,7 +581,7 @@ fun WorkDayItem(workDay: WorkDay) {
         // Primeira Coluna: Data e dia da semana
         Column(
             modifier = Modifier
-                .weight(1f)
+                .weight(2f) // Aumentado para 2f para dar mais espaço
                 .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
         ) {
             Text(
@@ -594,7 +599,7 @@ fun WorkDayItem(workDay: WorkDay) {
         // Segunda Coluna: Marcações (Entrada e Saída)
         Column(
             modifier = Modifier
-                .weight(2f)
+                .weight(1.5f) // Reduzido para 1.5f
                 .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
         ) {
             Text(
@@ -611,7 +616,7 @@ fun WorkDayItem(workDay: WorkDay) {
                 .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
         ) {
             Text(
-                text = "$totalHours - 1 Trabalhando",
+                text = "$totalHours Trabalhado",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
             )
@@ -626,7 +631,6 @@ fun WorkDayItem(workDay: WorkDay) {
 
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 }
-
 
 // Modificações na data class WorkDay para ajustar as horas de trabalho e calcular o crédito/débito:
 @RequiresApi(Build.VERSION_CODES.O)
