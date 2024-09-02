@@ -52,7 +52,6 @@ class MainActivity : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MyApp() {
-    // Detecta o tema do sistema na primeira inicialização
     val isSystemDarkTheme = isSystemInDarkTheme()
     var isDarkTheme by remember { mutableStateOf(isSystemDarkTheme) }
 
@@ -62,14 +61,11 @@ fun MyApp() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            // Configuração da Navegação
             NavigationComponent(navController, isDarkTheme, onThemeChange = { isDarkTheme = it })
         }
     }
 }
 
-
-// Mapa de usuários com nome completo, senha e email
 val userCredentials = mutableMapOf(
     "l.serenato" to UserProfile("Lucas Albano Ribas Serenato", "1234", "lk.serenato@example.com","adm"),
     "lorenna.j" to UserProfile("Lorenna Judit", "qwe123", "lohve@example.com","user"),
@@ -77,7 +73,6 @@ val userCredentials = mutableMapOf(
     "mirian.a" to UserProfile("Mirian Albano Ribas", "senha", "mirian@example.com","user")
 )
 
-// Data class para armazenar as informações do perfil
 data class UserProfile(
     val fullName: String,
     val password: String,
@@ -85,7 +80,6 @@ data class UserProfile(
     val accessLevel: String
 )
 
-// Mapa de horas trabalhadas por usuário
 @RequiresApi(Build.VERSION_CODES.O)
 val workHours = mutableMapOf(
     "l.serenato" to mutableListOf(
@@ -100,7 +94,6 @@ val workHours = mutableMapOf(
     )
 )
 
-// Composable para navegação
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
@@ -139,7 +132,7 @@ fun RegistrationScreen(navController: NavHostController) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var accessLevel by remember { mutableStateOf("user") }
-    var isRegistering by remember { mutableStateOf(false) } // Controle para exibir campos de cadastro
+    var isRegistering by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
     Box(
@@ -155,7 +148,6 @@ fun RegistrationScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de nome de usuário
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -165,7 +157,6 @@ fun RegistrationScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de senha
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -174,11 +165,9 @@ fun RegistrationScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Mostrar os campos de nome completo e email ao clicar no botão de cadastro
             if (isRegistering) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Campo de nome completo
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
@@ -188,7 +177,6 @@ fun RegistrationScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Campo de email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -199,13 +187,11 @@ fun RegistrationScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Mensagem de erro
             if (errorMessage.isNotEmpty()) {
                 Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botões lado a lado
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
@@ -213,7 +199,6 @@ fun RegistrationScreen(navController: NavHostController) {
                 Button(
                     onClick = {
                         if (isRegistering) {
-                            // Valida os campos de cadastro
                             when {
                                 fullName.isEmpty() -> errorMessage = "O campo nome completo não pode estar vazio."
                                 email.isEmpty() -> errorMessage = "O campo email não pode estar vazio."
@@ -221,26 +206,23 @@ fun RegistrationScreen(navController: NavHostController) {
                                 password.isEmpty() -> errorMessage = "O campo senha não pode estar vazio."
                                 else -> {
                                     errorMessage = ""
-                                    // Adicionar o usuário à base de dados (simulação)
                                     userCredentials[username] = UserProfile(fullName, password, email, accessLevel)
                                     navController.navigate("second_screen/$username")
                                 }
                             }
                         } else {
-                            // Validação para login
                             when {
                                 username.isEmpty() -> errorMessage = "O campo usuário não pode estar vazio."
                                 password.isEmpty() -> errorMessage = "O campo senha não pode estar vazio."
                                 userCredentials.containsKey(username) && userCredentials[username]?.password == password -> {
                                     errorMessage = ""
-                                    // Navegar para a segunda tela passando o nome do usuário
                                     navController.navigate("second_screen/$username")
                                 }
                                 else -> errorMessage = "Usuário ou senha inválidos."
                             }
                         }
                     },
-                    modifier = Modifier.weight(1f) // Ocupa metade da linha
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(text = if (isRegistering) "Cadastrar" else "Entrar")
                 }
@@ -248,8 +230,8 @@ fun RegistrationScreen(navController: NavHostController) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Button(
-                    onClick = { isRegistering = !isRegistering }, // Alterna o modo de cadastro
-                    modifier = Modifier.weight(1f) // Ocupa metade da linha
+                    onClick = { isRegistering = !isRegistering },
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(text = if (isRegistering) "Cancelar" else "Cadastro")
                 }
@@ -258,7 +240,6 @@ fun RegistrationScreen(navController: NavHostController) {
     }
 }
 
-// Tela de Login
 @Composable
 fun LoginScreen(navController: NavHostController) {
     var username by remember { mutableStateOf("") }
@@ -279,7 +260,6 @@ fun LoginScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de nome de usuário
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
@@ -289,7 +269,6 @@ fun LoginScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de senha
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -300,16 +279,13 @@ fun LoginScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Mensagem de erro
             if (loginError) {
                 Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botão de login
             Button(
                 onClick = {
-                    // Valida os campos
                     if (username.isEmpty()) {
                         loginError = true
                         errorMessage = "O campo usuário não pode estar vazio."
@@ -318,7 +294,6 @@ fun LoginScreen(navController: NavHostController) {
                         errorMessage = "O campo senha não pode estar vazio."
                     } else if (userCredentials.containsKey(username) && userCredentials[username]?.password == password) {
                         loginError = false
-                        // Navegar para a segunda tela passando o nome do usuário
                         navController.navigate("second_screen/$username")
                     } else {
                         loginError = true
@@ -333,26 +308,20 @@ fun LoginScreen(navController: NavHostController) {
     }
 }
 
-// Tela Principal (onde está o Card)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController, username: String, isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
-    // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "", "")
 
-    // Extrair o primeiro nome do fullName
     val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
 
-    // Estado para controlar a abertura do drawer
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
-    // Itens do drawer
-    val items = mutableListOf("Consulta de Hora", "Tela 3") // Inicialmente só incluem as telas acessíveis a todos
+    val items = mutableListOf("Consulta de Hora", "Tela 3")
 
-    // Adicionar "Tela 1" se o nível de acesso for "adm"
     if (userProfile.accessLevel == "adm") {
-        items.add(0, "Tela administrativa") // Adiciona "Tela 1" ao topo da lista
+        items.add(0, "Tela administrativa")
     }
 
     ModalNavigationDrawer(
@@ -366,13 +335,12 @@ fun MainScreen(navController: NavHostController, username: String, isDarkTheme: 
                     DropdownMenuItem(
                         text = { Text(item) },
                         onClick = {
-                            // Abrir a tela correspondente
                             when (item) {
                                 "Tela administrativa" -> navController.navigate("tela_1")
                                 "Consulta de Hora" -> navController.navigate("tela_2/$username")
                                 "Tela 3" -> navController.navigate("tela_3")
                             }
-                            coroutineScope.launch { drawerState.close() } // Fecha o drawer após o clique
+                            coroutineScope.launch { drawerState.close() }
                         }
                     )
                 }
@@ -385,22 +353,19 @@ fun MainScreen(navController: NavHostController, username: String, isDarkTheme: 
                     title = { Text("Página Inicial") },
                     navigationIcon = {
                         IconButton(onClick = {
-                            // Abrir o drawer ao clicar no ícone do menu
                             coroutineScope.launch { drawerState.open() }
                         }) {
                             Icon(
-                                imageVector = Icons.Default.Menu, // Ícone de menu padrão
+                                imageVector = Icons.Default.Menu,
                                 contentDescription = "Abrir Menu"
                             )
                         }
                     },
                     actions = {
-                        // Ícone do perfil que, ao ser clicado, abre o DropdownMenu
                         Box {
                             var showMenu by remember { mutableStateOf(false) }
 
                             IconButton(onClick = { showMenu = !showMenu }) {
-                                // Aqui substituí o ic_profile pela imagem do usuário logado (profile_icon)
                                 Image(
                                     painter = painterResource(id = R.drawable.profile_icon),
                                     contentDescription = "Perfil",
@@ -410,58 +375,51 @@ fun MainScreen(navController: NavHostController, username: String, isDarkTheme: 
                                 )
                             }
 
-                            // DropdownMenu que aparece quando o ícone de perfil é clicado
                             DropdownMenu(
                                 expanded = showMenu,
-                                onDismissRequest = { showMenu = false } // Fechar menu quando clicar fora
+                                onDismissRequest = { showMenu = false }
                             ) {
-                                // Opção "Gerenciar Perfil"
                                 DropdownMenuItem(
                                     text = { Text("Gerenciar Perfil") },
                                     onClick = {
-                                        // Navegar para a página de perfil
                                         navController.navigate("profile_screen/$username")
-                                        showMenu = false // Fechar o menu
+                                        showMenu = false
                                     }
                                 )
 
-                                // Adiciona um Spacer para separar as opções anteriores
                                 Spacer(Modifier.height(8.dp))
 
-                                // Adiciona o switch para alternar o tema
                                 DropdownMenuItem(
                                     text = {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text(text = "Modo Escuro", style = MaterialTheme.typography.bodySmall) // Texto menor
+                                            Text(text = "Modo Escuro", style = MaterialTheme.typography.bodySmall)
                                             Spacer(modifier = Modifier.weight(1f))
                                             Switch(
                                                 checked = isDarkTheme,
                                                 onCheckedChange = { onThemeChange(it) },
-                                                modifier = Modifier.scale(0.7f) // Escala o switch para 70% do tamanho original
+                                                modifier = Modifier.scale(0.7f)
                                             )
                                         }
                                     },
-                                    onClick = {} // Não faz nada ao clicar, já que o Switch é o controle principal
+                                    onClick = {}
                                 )
 
-                                // Opção "Trocar Conta"
                                 DropdownMenuItem(
-                                    text = { Text("Trocar Conta", style = MaterialTheme.typography.bodySmall) }, // Texto menor
+                                    text = { Text("Trocar Conta", style = MaterialTheme.typography.bodySmall) },
                                     onClick = {
                                         navController.navigate("login_screen")
-                                        showMenu = false // Fechar o menu
+                                        showMenu = false
                                     }
                                 )
 
-                                // Opção "Sair da Conta" - Agora redireciona para a tela de cadastro
                                 DropdownMenuItem(
-                                    text = { Text("Sair da Conta", style = MaterialTheme.typography.bodySmall) }, // Texto menor
+                                    text = { Text("Sair da Conta", style = MaterialTheme.typography.bodySmall) },
                                     onClick = {
                                         navController.navigate("registration_screen")
-                                        showMenu = false // Fechar o menu
+                                        showMenu = false
                                     }
                                 )
                             }
@@ -476,7 +434,6 @@ fun MainScreen(navController: NavHostController, username: String, isDarkTheme: 
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                // Exibe o cartão com a mensagem de boas-vindas
                 Card(Mensagem(firstName, "Olá, seja bem-vindo!"))
             }
         }
@@ -492,7 +449,6 @@ fun Tela1Screen(navController: NavHostController) {
                 title = { Text("Tela 1") },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Voltar para a tela anterior (SecondScreen)
                         navController.popBackStack()
                     }) {
                         Icon(
@@ -515,8 +471,8 @@ fun Tela1Screen(navController: NavHostController) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Tela2Screen(navController: NavHostController, username: String) {
     var isEditing by remember { mutableStateOf(false) }
@@ -536,12 +492,10 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        isEditing = !isEditing
-                    }) {
+                    IconButton(onClick = { isEditing = !isEditing }) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = if (isEditing) "Salvar Edição" else "Editar Horários"
+                            contentDescription = if (isEditing) "Salvar" else "Editar"
                         )
                     }
                 }
@@ -553,7 +507,6 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Exibir a lista de registros de banco de horas do usuário logado
             WorkHoursList(username = username, isEditing = isEditing)
         }
     }
@@ -562,7 +515,6 @@ fun Tela2Screen(navController: NavHostController, username: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkHoursList(username: String, isEditing: Boolean) {
-    // Filtra e ordena os registros para o usuário logado por data, do mais recente para o mais antigo
     val workDays = workHours[username]?.sortedByDescending {
         LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     } ?: emptyList()
@@ -579,14 +531,13 @@ fun WorkHoursList(username: String, isEditing: Boolean) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
-    // Estados para os horários de entrada e saída, inicializados com os valores do WorkDay
     var entryTime by remember { mutableStateOf(workDay.entryTime) }
     var exitTime by remember { mutableStateOf(workDay.exitTime) }
 
-    // Atualiza as horas trabalhadas, crédito e débito conforme os horários são editados
-    val totalHours = calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
-    val credit = calculateCredit(totalHours, workDay.dayOfWeek)
-    val debit = calculateDebit(totalHours, workDay.dayOfWeek)
+    // Verifique e valide os horários antes de usá-los para cálculos
+    val totalHours = tryCalculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
+    val credit = tryCalculateCredit(totalHours, workDay.dayOfWeek)
+    val debit = tryCalculateDebit(totalHours, workDay.dayOfWeek)
 
     Row(
         modifier = Modifier
@@ -619,7 +570,6 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
                 .align(Alignment.CenterVertically)
         ) {
             if (isEditing) {
-                // Campos de texto editáveis para entrada e saída
                 OutlinedTextField(
                     value = entryTime,
                     onValueChange = { entryTime = it },
@@ -633,7 +583,6 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             } else {
-                // Exibe os horários normalmente
                 Text(
                     text = "$entryTime - $exitTime",
                     style = MaterialTheme.typography.bodyMedium,
@@ -665,85 +614,110 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 }
 
-// Modificações na data class WorkDay para ajustar as horas de trabalho e calcular o crédito/débito:
+// Funções auxiliares para cálculo com tratamento de exceções
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun tryCalculateTotalAdjustedHours(entryTime: String, exitTime: String, dayOfWeek: String): String {
+    return try {
+        calculateTotalAdjustedHours(entryTime, exitTime, dayOfWeek)
+    } catch (e: Exception) {
+        "Erro"
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun tryCalculateCredit(totalHours: String, dayOfWeek: String): String {
+    return try {
+        calculateCredit(totalHours, dayOfWeek)
+    } catch (e: Exception) {
+        "Erro"
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun tryCalculateDebit(totalHours: String, dayOfWeek: String): String {
+    return try {
+        calculateDebit(totalHours, dayOfWeek)
+    } catch (e: Exception) {
+        "Erro"
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 data class WorkDay(
     val date: String,
-    val entryTime: String,
-    val exitTime: String
+    var entryTime: String,
+    var exitTime: String
 ) {
     val dayOfWeek: String = calculateDayOfWeek(date)
 
-    // Calcula as horas totais ajustadas considerando o intervalo de almoço
     @RequiresApi(Build.VERSION_CODES.O)
-    val totalAdjustedHours: String = calculateTotalAdjustedHours(entryTime, exitTime)
-
-    // Considera 9 horas como jornada padrão de segunda a quinta e 8 horas na sexta
-    @RequiresApi(Build.VERSION_CODES.O)
-    val credit: String = calculateCredit(totalAdjustedHours)
-    @RequiresApi(Build.VERSION_CODES.O)
-    val debit: String = calculateDebit(totalAdjustedHours)
+    val totalAdjustedHours: String = calculateTotalAdjustedHours(entryTime, exitTime, dayOfWeek)
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateTotalAdjustedHours(entryTime: String, exitTime: String): String {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val entry = LocalTime.parse(entryTime, formatter)
-        val exit = if (exitTime.isBlank()) LocalTime.of(12, 0) else LocalTime.parse(exitTime, formatter)
+    val credit: String = calculateCredit(totalAdjustedHours, dayOfWeek)
+    @RequiresApi(Build.VERSION_CODES.O)
+    val debit: String = calculateDebit(totalAdjustedHours, dayOfWeek)
+}
 
-        var totalMinutes = ChronoUnit.MINUTES.between(entry, exit)
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateTotalAdjustedHours(entryTime: String, exitTime: String, dayOfWeek: String): String {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val entry = LocalTime.parse(entryTime, formatter)
+    val exit = if (exitTime.isBlank()) LocalTime.of(12, 0) else LocalTime.parse(exitTime, formatter)
 
-        // Subtrai 1 hora de almoço apenas se a saída for após 13:00
-        if (exit >= LocalTime.of(13, 0)) {
-            totalMinutes -= 60
-        }
+    var totalMinutes = ChronoUnit.MINUTES.between(entry, exit)
 
-        // Garantir que o total de minutos não seja negativo
-        totalMinutes = if (totalMinutes < 0) 0 else totalMinutes
-
-        val hours = totalMinutes / 60
-        val minutes = totalMinutes % 60
-        return "%02d:%02d".format(hours, minutes)
+    if (exit >= LocalTime.of(13, 0)) {
+        totalMinutes -= 60
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateCredit(totalHours: String): String {
-        val total = parseTime(totalHours)
-        val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
-        return if (total.isAfter(standardHours)) {
-            val extraMinutes = ChronoUnit.MINUTES.between(standardHours, total)
-            val hours = extraMinutes / 60
-            val minutes = extraMinutes % 60
-            "%02d:%02d".format(hours, minutes)
-        } else {
-            "00:00"
-        }
-    }
+    totalMinutes = if (totalMinutes < 0) 0 else totalMinutes
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateDebit(totalHours: String): String {
-        val total = parseTime(totalHours)
-        val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
-        return if (total.isBefore(standardHours)) {
-            val deficitMinutes = ChronoUnit.MINUTES.between(total, standardHours)
-            val hours = deficitMinutes / 60
-            val minutes = deficitMinutes % 60
-            "%02d:%02d".format(hours, minutes)
-        } else {
-            "00:00"
-        }
-    }
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+    return "%02d:%02d".format(hours, minutes)
+}
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateDayOfWeek(date: String): String {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val localDate = LocalDate.parse(date, formatter)
-        return localDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateCredit(totalHours: String, dayOfWeek: String): String {
+    val total = parseTime(totalHours)
+    val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
+    return if (total.isAfter(standardHours)) {
+        val extraMinutes = ChronoUnit.MINUTES.between(standardHours, total)
+        val hours = extraMinutes / 60
+        val minutes = extraMinutes % 60
+        "%02d:%02d".format(hours, minutes)
+    } else {
+        "00:00"
     }
+}
 
-    private fun parseTime(time: String): LocalTime {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        return LocalTime.parse(time, formatter)
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateDebit(totalHours: String, dayOfWeek: String): String {
+    val total = parseTime(totalHours)
+    val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
+    return if (total.isBefore(standardHours)) {
+        val deficitMinutes = ChronoUnit.MINUTES.between(total, standardHours)
+        val hours = deficitMinutes / 60
+        val minutes = deficitMinutes % 60
+        "%02d:%02d".format(hours, minutes)
+    } else {
+        "00:00"
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateDayOfWeek(date: String): String {
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val localDate = LocalDate.parse(date, formatter)
+    return localDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun parseTime(time: String): LocalTime {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return LocalTime.parse(time, formatter)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -755,7 +729,6 @@ fun Tela3Screen(navController: NavHostController) {
                 title = { Text("Tela 3") },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Voltar para a tela anterior (SecondScreen)
                         navController.popBackStack()
                     }) {
                         Icon(
@@ -778,52 +751,46 @@ fun Tela3Screen(navController: NavHostController) {
     }
 }
 
-// Tela de Perfil do Usuário
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavHostController, username: String) {
-    // Buscar as informações do usuário a partir do mapa userCredentials
     val userProfile = userCredentials[username] ?: UserProfile("Desconhecido", "", "", "")
 
-    // Extrair o primeiro nome do fullName
     val firstName = userProfile.fullName.split(" ").firstOrNull() ?: "Desconhecido"
 
-    // Estado para controlar se o perfil está em modo de edição
     var isEditing by remember { mutableStateOf(false) }
 
-    // Estado local para os campos de texto
     var fullName by remember { mutableStateOf(userProfile.fullName) }
     var email by remember { mutableStateOf(userProfile.email) }
     var password by remember { mutableStateOf(userProfile.password) }
-    val accessLevel = userProfile.accessLevel // Nível de acesso é sempre não editável
+    val accessLevel = userProfile.accessLevel
 
-    // Cores customizadas para os campos desabilitados
     val customTextFieldColors = TextFieldDefaults.outlinedTextFieldColors(
-        disabledTextColor = MaterialTheme.colorScheme.onSurface, // Cor do texto quando desabilitado
-        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant, // Cor do rótulo quando desabilitado
-        disabledBorderColor = MaterialTheme.colorScheme.onSurface // Cor da borda quando desabilitado
+        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        disabledBorderColor = MaterialTheme.colorScheme.onSurface
     )
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Perfil de $firstName") }, // Mostra o primeiro nome
+                title = { Text("Perfil de $firstName") },
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.popBackStack() // Voltar para a tela anterior
+                        navController.popBackStack()
                     }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, // Ícone de seta para voltar
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Voltar"
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = {
-                        isEditing = !isEditing // Alternar o modo de edição
+                        isEditing = !isEditing
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Edit, // Ícone de edição
+                            imageVector = Icons.Default.Edit,
                             contentDescription = if (isEditing) "Salvar" else "Editar Perfil"
                         )
                     }
@@ -839,7 +806,7 @@ fun ProfileScreen(navController: NavHostController, username: String) {
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp), // Espaçamento entre os elementos
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(16.dp)
             ) {
                 Image(
@@ -850,54 +817,49 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                         .clip(CircleShape)
                 )
 
-                // Campo de nome completo
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
                     label = { Text("Nome Completo") },
-                    enabled = isEditing, // Habilita edição apenas se isEditing for true
-                    colors = customTextFieldColors, // Define as cores customizadas
+                    enabled = isEditing,
+                    colors = customTextFieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Campo de nome de usuário (não editável)
                 OutlinedTextField(
                     value = username,
                     onValueChange = {},
                     label = { Text("Nome de Usuário") },
                     enabled = false,
-                    colors = customTextFieldColors, // Define as cores customizadas
+                    colors = customTextFieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Campo de email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
-                    enabled = isEditing, // Habilita edição apenas se isEditing for true
-                    colors = customTextFieldColors, // Define as cores customizadas
+                    enabled = isEditing,
+                    colors = customTextFieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Campo de senha
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Senha") },
-                    enabled = isEditing, // Habilita edição apenas se isEditing for true
+                    enabled = isEditing,
                     visualTransformation = PasswordVisualTransformation(),
-                    colors = customTextFieldColors, // Define as cores customizadas
+                    colors = customTextFieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Campo de nível de acesso (não editável)
                 OutlinedTextField(
                     value = accessLevel,
                     onValueChange = {},
                     label = { Text("Nível de Acesso") },
-                    enabled = false, // Não pode ser editado
-                    colors = customTextFieldColors, // Define as cores customizadas
+                    enabled = false,
+                    colors = customTextFieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -933,5 +895,3 @@ fun LoginScreenPreview() {
         LoginScreen(navController = rememberNavController())
     }
 }
-
-
