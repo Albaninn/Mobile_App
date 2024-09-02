@@ -17,6 +17,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -525,10 +528,9 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.HourglassFull,
+                    Image(
+                        painter = painterResource(id = R.drawable.ampfull),
                         contentDescription = "Saldo Positivo",
-                        tint = if (totalPositiveHours > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
@@ -538,14 +540,14 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                     Text("Positivo", style = MaterialTheme.typography.bodySmall)
                 }
 
+
                 // Saldo Negativo
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.HourglassEmpty,
+                    Image(
+                        painter = painterResource(id = R.drawable.amp),
                         contentDescription = "Saldo Negativo",
-                        tint = if (totalNegativeHours > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
@@ -557,12 +559,13 @@ fun Tela2Screen(navController: NavHostController, username: String) {
 
                 // Toggle entre Horas e Reais
                 IconButton(onClick = { showInReais = !showInReais }) {
-                    Icon(
-                        imageVector = Icons.Default.MonetizationOn,
+                    Image(
+                        painter = painterResource(id = R.drawable.money),
                         contentDescription = if (showInReais) "Mostrar em Horas" else "Mostrar em Reais",
                         modifier = Modifier.size(24.dp)
                     )
                 }
+
             }
 
             // Filtro por tempo
@@ -588,7 +591,7 @@ fun FilterByTime(selectedMonth: Month?, onMonthSelected: (Month?) -> Unit) {
         OutlinedButton(onClick = { expanded = true }) {
             Text(text = selectedMonth?.name ?: "Selecionar Mês")
             Icon(
-                imageVector = if (expanded) Icons.Default.arrow_upward else Icons.Default.ArrowDropDown,
+                imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = null
             )
         }
@@ -597,20 +600,21 @@ fun FilterByTime(selectedMonth: Month?, onMonthSelected: (Month?) -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            DropdownMenuItem(onClick = {
-                onMonthSelected(null)
-                expanded = false
-            }) {
-                Text("Todos")
-            }
-
-            months.forEach { month ->
-                DropdownMenuItem(onClick = {
-                    onMonthSelected(month)
+            DropdownMenuItem(
+                text = { Text("Todos") },
+                onClick = {
+                    onMonthSelected(null)
                     expanded = false
-                }) {
-                    Text(month.name)
                 }
+            )
+            months.forEach { month ->
+                DropdownMenuItem(
+                    text = { Text(month.name) },
+                    onClick = {
+                        onMonthSelected(month)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -670,6 +674,7 @@ fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
     Row(
