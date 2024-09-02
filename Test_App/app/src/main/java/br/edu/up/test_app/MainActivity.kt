@@ -676,9 +676,40 @@ fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
-    val totalHours = workDay.totalAdjustedHours
-    val credit = workDay.credit
-    val debit = workDay.debit
+    var entryTime by remember { mutableStateOf(workDay.entryTime) }
+    var exitTime by remember { mutableStateOf(workDay.exitTime) }
+
+    // Função para validar e formatar as horas
+    fun parseAndFormatTime(time: String): String {
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("HH:mm")
+            val parsedTime = LocalTime.parse(time, formatter)
+            parsedTime.format(formatter)
+        } catch (e: Exception) {
+            "Invalid"
+        }
+    }
+
+    // Recalcula total de horas, crédito e débito toda vez que as horas são editadas
+    val totalHours by remember(entryTime, exitTime) {
+        mutableStateOf(
+            if (parseAndFormatTime(entryTime) != "Invalid" && parseAndFormatTime(exitTime) != "Invalid") {
+                calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
+            } else {
+                "Invalid"
+            }
+        )
+    }
+    val credit by remember(totalHours) {
+        mutableStateOf(
+            if (totalHours != "Invalid") calculateCredit(totalHours, workDay.dayOfWeek) else "00:00"
+        )
+    }
+    val debit by remember(totalHours) {
+        mutableStateOf(
+            if (totalHours != "Invalid") calculateDebit(totalHours, workDay.dayOfWeek) else "00:00"
+        )
+    }
 
     Row(
         modifier = Modifier
@@ -693,19 +724,49 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
         }
 
         // Coluna de Entrada
-        Text(text = workDay.entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        if (isEditing) {
+            OutlinedTextField(
+                value = entryTime,
+                onValueChange = { newTime ->
+                    entryTime = newTime
+                },
+                label = { Text("Entrada") },
+                singleLine = true,
+                isError = parseAndFormatTime(entryTime) == "Invalid",
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        }
 
         // Coluna de Saída
-        Text(text = workDay.exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        if (isEditing) {
+            OutlinedTextField(
+                value = exitTime,
+                onValueChange = { newTime ->
+                    exitTime = newTime
+                },
+                label = { Text("Saída") },
+                singleLine = true,
+                isError = parseAndFormatTime(exitTime) == "Invalid",
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        }
 
         // Coluna de Total de Horas e Crédito/Débito
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
-                style = MaterialTheme.typography.bodySmall,
-                color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-            )
+            if (totalHours == "Invalid") {
+                Text(text = "Erro", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            } else {
+                Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }
