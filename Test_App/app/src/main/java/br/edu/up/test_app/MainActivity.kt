@@ -658,7 +658,6 @@ fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = "Data", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Dia", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             Text(text = "Entrada", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             Text(text = "Saída", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
             Text(text = "Total", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
@@ -677,17 +676,37 @@ fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
+    val totalHours = workDay.totalAdjustedHours
+    val credit = workDay.credit
+    val debit = workDay.debit
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = workDay.date, modifier = Modifier.weight(1f))
-        Text(text = workDay.dayOfWeek, modifier = Modifier.weight(1f))
-        Text(text = workDay.entryTime, modifier = Modifier.weight(1f))
-        Text(text = workDay.exitTime, modifier = Modifier.weight(1f))
-        Text(text = workDay.totalAdjustedHours, modifier = Modifier.weight(1f))
+        // Coluna de Data e Dia da Semana
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = workDay.date, style = MaterialTheme.typography.bodyMedium)
+            Text(text = workDay.dayOfWeek, style = MaterialTheme.typography.bodySmall)
+        }
+
+        // Coluna de Entrada
+        Text(text = workDay.entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+
+        // Coluna de Saída
+        Text(text = workDay.exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+
+        // Coluna de Total de Horas e Crédito/Débito
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        }
     }
 }
 
