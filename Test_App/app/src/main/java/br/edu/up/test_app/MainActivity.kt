@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -22,9 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -35,9 +34,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import br.edu.up.test_app.ui.theme.Test_AppTheme
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -478,6 +477,12 @@ fun Tela1Screen(navController: NavHostController) {
 @Composable
 fun Tela2Screen(navController: NavHostController, username: String) {
     var isEditing by remember { mutableStateOf(false) }
+    var showInReais by remember { mutableStateOf(false) }
+    var selectedMonth by remember { mutableStateOf<Month?>(null) }
+
+    val totalPositiveHours = calculateTotalPositiveHours(username)
+    val totalNegativeHours = calculateTotalNegativeHours(username)
+    val valorHora = 16.65
 
     Scaffold(
         topBar = {
@@ -504,119 +509,182 @@ fun Tela2Screen(navController: NavHostController, username: String) {
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            WorkHoursList(username = username, isEditing = isEditing)
+            // Saldo do Banco de Horas
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Saldo Positivo
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HourglassFull,
+                        contentDescription = "Saldo Positivo",
+                        tint = if (totalPositiveHours > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = if (showInReais) "R\$ ${String.format("%.2f", totalPositiveHours * valorHora)}" else "$totalPositiveHours h",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Text("Positivo", style = MaterialTheme.typography.bodySmall)
+                }
+
+                // Saldo Negativo
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HourglassEmpty,
+                        contentDescription = "Saldo Negativo",
+                        tint = if (totalNegativeHours > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = if (showInReais) "R\$ ${String.format("%.2f", totalNegativeHours * valorHora)}" else "$totalNegativeHours h",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Text("Negativo", style = MaterialTheme.typography.bodySmall)
+                }
+
+                // Toggle entre Horas e Reais
+                IconButton(onClick = { showInReais = !showInReais }) {
+                    Icon(
+                        imageVector = Icons.Default.MonetizationOn,
+                        contentDescription = if (showInReais) "Mostrar em Horas" else "Mostrar em Reais",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Filtro por tempo
+            FilterByTime(selectedMonth) { month ->
+                selectedMonth = month
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Exibir a lista de registros de banco de horas do usuário logado
+            WorkHoursList(username = username, isEditing = isEditing, selectedMonth = selectedMonth)
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkHoursList(username: String, isEditing: Boolean) {
+fun FilterByTime(selectedMonth: Month?, onMonthSelected: (Month?) -> Unit) {
+    val months = Month.values()
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(text = selectedMonth?.name ?: "Selecionar Mês")
+            Icon(
+                imageVector = if (expanded) Icons.Default.arrow_upward else Icons.Default.ArrowDropDown,
+                contentDescription = null
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(onClick = {
+                onMonthSelected(null)
+                expanded = false
+            }) {
+                Text("Todos")
+            }
+
+            months.forEach { month ->
+                DropdownMenuItem(onClick = {
+                    onMonthSelected(month)
+                    expanded = false
+                }) {
+                    Text(month.name)
+                }
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateTotalPositiveHours(username: String): Double {
+    val userWorkDays = workHours[username] ?: emptyList()
+    return userWorkDays.sumOf { workDay ->
+        val hours = workDay.totalAdjustedHours.replace("h", "").toDoubleOrNull() ?: 0.0
+        if (hours > 0) hours else 0.0
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateTotalNegativeHours(username: String): Double {
+    val userWorkDays = workHours[username] ?: emptyList()
+    return userWorkDays.sumOf { workDay ->
+        val hours = workDay.totalAdjustedHours.replace("h", "").toDoubleOrNull() ?: 0.0
+        if (hours < 0) hours else 0.0
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
     val workDays = workHours[username]?.sortedByDescending {
         LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    }?.filter {
+        selectedMonth == null || LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy")).month == selectedMonth
     } ?: emptyList()
 
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
+        // Cabeçalho da tabela
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "Data", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Dia", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Entrada", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Saída", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Total", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        }
+
+        Divider()
+
+        // Itens da tabela
         workDays.forEach { workDay ->
             WorkDayItem(workDay, isEditing)
+            Divider()
         }
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
-    var entryTime by remember { mutableStateOf(workDay.entryTime) }
-    var exitTime by remember { mutableStateOf(workDay.exitTime) }
-
-    // Verifique e valide os horários antes de usá-los para cálculos
-    val totalHours = tryCalculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
-    val credit = tryCalculateCredit(totalHours, workDay.dayOfWeek)
-    val debit = tryCalculateDebit(totalHours, workDay.dayOfWeek)
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Primeira Coluna: Data e dia da semana
-        Column(
-            modifier = Modifier
-                .weight(2f)
-                .align(Alignment.CenterVertically)
-        ) {
-            Text(
-                text = workDay.date,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Text(
-                text = workDay.dayOfWeek,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-        }
-
-        // Segunda Coluna: Marcações (Entrada e Saída)
-        Column(
-            modifier = Modifier
-                .weight(1.5f)
-                .align(Alignment.CenterVertically)
-        ) {
-            if (isEditing) {
-                OutlinedTextField(
-                    value = entryTime,
-                    onValueChange = { entryTime = it },
-                    label = { Text("Entrada") },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-                OutlinedTextField(
-                    value = exitTime,
-                    onValueChange = { exitTime = it },
-                    label = { Text("Saída") },
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            } else {
-                Text(
-                    text = "$entryTime - $exitTime",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
-        }
-
-        // Terceira Coluna: Situações (Horas Trabalhadas, Crédito, Débito)
-        Column(
-            modifier = Modifier
-                .weight(2f)
-                .align(Alignment.CenterVertically)
-        ) {
-            Text(
-                text = "$totalHours Trabalhado",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Text(
-                text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-        }
+        Text(text = workDay.date, modifier = Modifier.weight(1f))
+        Text(text = workDay.dayOfWeek, modifier = Modifier.weight(1f))
+        Text(text = workDay.entryTime, modifier = Modifier.weight(1f))
+        Text(text = workDay.exitTime, modifier = Modifier.weight(1f))
+        Text(text = workDay.totalAdjustedHours, modifier = Modifier.weight(1f))
     }
-
-    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
 }
-
-// Funções auxiliares para cálculo com tratamento de exceções
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun tryCalculateTotalAdjustedHours(entryTime: String, exitTime: String, dayOfWeek: String): String {
