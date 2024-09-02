@@ -567,8 +567,8 @@ fun WorkHoursList(username: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun WorkDayItem(workDay: WorkDay) {
-    // Calcula as situações (horas totais ajustadas, crédito, débito)
-    val totalHours = workDay.totalAdjustedHours // Total de horas ajustado (-1h para almoço)
+    // Obtém as informações calculadas
+    val totalHours = workDay.totalAdjustedHours // Horas ajustadas considerando o intervalo de almoço
     val credit = workDay.credit
     val debit = workDay.debit
 
@@ -581,50 +581,50 @@ fun WorkDayItem(workDay: WorkDay) {
         // Primeira Coluna: Data e dia da semana
         Column(
             modifier = Modifier
-                .weight(2f) // Aumentado para 2f para dar mais espaço
-                .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
+                .weight(2f) // Aumentado para dar mais espaço
+                .align(Alignment.CenterVertically)
         ) {
             Text(
                 text = workDay.date,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             Text(
                 text = workDay.dayOfWeek,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
 
         // Segunda Coluna: Marcações (Entrada e Saída)
         Column(
             modifier = Modifier
-                .weight(1.5f) // Reduzido para 1.5f
-                .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
+                .weight(1.5f) // Ajustado conforme solicitado
+                .align(Alignment.CenterVertically)
         ) {
             Text(
                 text = "${workDay.entryTime} - ${workDay.exitTime}",
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
 
-        // Terceira Coluna: Situações (Trabalhadas, Crédito, Débito)
+        // Terceira Coluna: Situações (Horas Trabalhadas, Crédito, Débito)
         Column(
             modifier = Modifier
                 .weight(2f)
-                .align(Alignment.CenterVertically) // Centraliza o conteúdo verticalmente
+                .align(Alignment.CenterVertically)
         ) {
             Text(
                 text = "$totalHours Trabalhado",
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             Text(
                 text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Centraliza o texto horizontalmente
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
     }
@@ -641,7 +641,7 @@ data class WorkDay(
 ) {
     val dayOfWeek: String = calculateDayOfWeek(date)
 
-    // Calcula as horas totais ajustadas (-1h para almoço)
+    // Calcula as horas totais ajustadas considerando o intervalo de almoço
     @RequiresApi(Build.VERSION_CODES.O)
     val totalAdjustedHours: String = calculateTotalAdjustedHours(entryTime, exitTime)
 
@@ -653,9 +653,20 @@ data class WorkDay(
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateTotalAdjustedHours(entryTime: String, exitTime: String): String {
-        val entry = LocalTime.parse(entryTime)
-        val exit = LocalTime.parse(exitTime)
-        val totalMinutes = ChronoUnit.MINUTES.between(entry, exit) - 60 // Subtrai 60 minutos (1 hora de almoço)
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        val entry = LocalTime.parse(entryTime, formatter)
+        val exit = if (exitTime.isBlank()) LocalTime.of(12, 0) else LocalTime.parse(exitTime, formatter)
+
+        var totalMinutes = ChronoUnit.MINUTES.between(entry, exit)
+
+        // Subtrai 1 hora de almoço apenas se a saída for após 13:00
+        if (exit >= LocalTime.of(13, 0)) {
+            totalMinutes -= 60
+        }
+
+        // Garantir que o total de minutos não seja negativo
+        totalMinutes = if (totalMinutes < 0) 0 else totalMinutes
+
         val hours = totalMinutes / 60
         val minutes = totalMinutes % 60
         return "%02d:%02d".format(hours, minutes)
@@ -663,8 +674,8 @@ data class WorkDay(
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateCredit(totalHours: String): String {
-        val total = LocalTime.parse(totalHours)
-        val standardHours = if (dayOfWeek == "sexta-feira") LocalTime.of(8, 0) else LocalTime.of(9, 0)
+        val total = parseTime(totalHours)
+        val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
         return if (total.isAfter(standardHours)) {
             val extraMinutes = ChronoUnit.MINUTES.between(standardHours, total)
             val hours = extraMinutes / 60
@@ -677,8 +688,8 @@ data class WorkDay(
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateDebit(totalHours: String): String {
-        val total = LocalTime.parse(totalHours)
-        val standardHours = if (dayOfWeek == "sexta-feira") LocalTime.of(8, 0) else LocalTime.of(9, 0)
+        val total = parseTime(totalHours)
+        val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
         return if (total.isBefore(standardHours)) {
             val deficitMinutes = ChronoUnit.MINUTES.between(total, standardHours)
             val hours = deficitMinutes / 60
@@ -694,6 +705,11 @@ data class WorkDay(
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val localDate = LocalDate.parse(date, formatter)
         return localDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+    }
+
+    private fun parseTime(time: String): LocalTime {
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        return LocalTime.parse(time, formatter)
     }
 }
 
