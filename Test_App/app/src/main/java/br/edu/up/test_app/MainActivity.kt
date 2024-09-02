@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
@@ -494,7 +496,7 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                 actions = {
                     IconButton(onClick = { isEditing = !isEditing }) {
                         Icon(
-                            imageVector = Icons.Default.Edit,
+                            imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
                             contentDescription = if (isEditing) "Salvar" else "Editar"
                         )
                     }
@@ -790,7 +792,7 @@ fun ProfileScreen(navController: NavHostController, username: String) {
                         isEditing = !isEditing
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Edit,
+                            imageVector = if (isEditing) Icons.Default.CheckCircle else Icons.Default.Edit,
                             contentDescription = if (isEditing) "Salvar" else "Editar Perfil"
                         )
                     }
