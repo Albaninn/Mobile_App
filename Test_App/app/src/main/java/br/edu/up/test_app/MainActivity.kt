@@ -519,6 +519,8 @@ fun Tela1Screen(navController: NavHostController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Tela2Screen(navController: NavHostController, username: String) {
+    var isEditing by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -532,6 +534,16 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                             contentDescription = "Voltar"
                         )
                     }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        isEditing = !isEditing
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = if (isEditing) "Salvar Edição" else "Editar Horários"
+                        )
+                    }
                 }
             )
         }
@@ -542,14 +554,14 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                 .padding(padding)
         ) {
             // Exibir a lista de registros de banco de horas do usuário logado
-            WorkHoursList(username = username)
+            WorkHoursList(username = username, isEditing = isEditing)
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkHoursList(username: String) {
+fun WorkHoursList(username: String, isEditing: Boolean) {
     // Filtra e ordena os registros para o usuário logado por data, do mais recente para o mais antigo
     val workDays = workHours[username]?.sortedByDescending {
         LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
@@ -559,18 +571,22 @@ fun WorkHoursList(username: String) {
         modifier = Modifier.fillMaxWidth()
     ) {
         workDays.forEach { workDay ->
-            WorkDayItem(workDay)
+            WorkDayItem(workDay, isEditing)
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkDayItem(workDay: WorkDay) {
-    // Obtém as informações calculadas
-    val totalHours = workDay.totalAdjustedHours // Horas ajustadas considerando o intervalo de almoço
-    val credit = workDay.credit
-    val debit = workDay.debit
+fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
+    // Estados para os horários de entrada e saída, inicializados com os valores do WorkDay
+    var entryTime by remember { mutableStateOf(workDay.entryTime) }
+    var exitTime by remember { mutableStateOf(workDay.exitTime) }
+
+    // Atualiza as horas trabalhadas, crédito e débito conforme os horários são editados
+    val totalHours = calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
+    val credit = calculateCredit(totalHours, workDay.dayOfWeek)
+    val debit = calculateDebit(totalHours, workDay.dayOfWeek)
 
     Row(
         modifier = Modifier
@@ -581,7 +597,7 @@ fun WorkDayItem(workDay: WorkDay) {
         // Primeira Coluna: Data e dia da semana
         Column(
             modifier = Modifier
-                .weight(2f) // Aumentado para dar mais espaço
+                .weight(2f)
                 .align(Alignment.CenterVertically)
         ) {
             Text(
@@ -599,14 +615,31 @@ fun WorkDayItem(workDay: WorkDay) {
         // Segunda Coluna: Marcações (Entrada e Saída)
         Column(
             modifier = Modifier
-                .weight(1.5f) // Ajustado conforme solicitado
+                .weight(1.5f)
                 .align(Alignment.CenterVertically)
         ) {
-            Text(
-                text = "${workDay.entryTime} - ${workDay.exitTime}",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            if (isEditing) {
+                // Campos de texto editáveis para entrada e saída
+                OutlinedTextField(
+                    value = entryTime,
+                    onValueChange = { entryTime = it },
+                    label = { Text("Entrada") },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                OutlinedTextField(
+                    value = exitTime,
+                    onValueChange = { exitTime = it },
+                    label = { Text("Saída") },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            } else {
+                // Exibe os horários normalmente
+                Text(
+                    text = "$entryTime - $exitTime",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
 
         // Terceira Coluna: Situações (Horas Trabalhadas, Crédito, Débito)
