@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -1012,7 +1013,7 @@ fun Ex1(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tela 1") },
+                title = { Text("Esta é o exercicio 1") },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -1026,13 +1027,42 @@ fun Ex1(navController: NavHostController) {
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Esta é o exercicio 1", style = MaterialTheme.typography.headlineLarge)
+            LayoutListas1() // Implementação do LayoutListas
+        }
+    }
+}
+
+@Composable
+fun LayoutListas1() {
+    val coresalinha = listOf(
+        Color.Green,
+        Color.Red,
+        Color.Yellow,
+        Color.Blue
+    )
+
+    Row(modifier = Modifier.fillMaxSize()) {
+
+        val modifierColumn = Modifier
+            .fillMaxHeight()
+            .weight(1f)
+        val modifierBox = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+
+        Column(modifier = modifierColumn) {
+            coresalinha.forEach { cor ->
+                Box(
+                    modifier = modifierBox
+                        .then(Modifier.background(cor))
+                )
+            }
         }
     }
 }
@@ -1043,7 +1073,7 @@ fun Ex2(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tela 2") },
+                title = { Text("Esta é o exercicio 2") },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -1057,13 +1087,52 @@ fun Ex2(navController: NavHostController) {
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Esta é o exercicio 2", style = MaterialTheme.typography.headlineLarge)
+            LayoutListas2() // Implementação do LayoutListas
+        }
+    }
+}
+
+@Composable
+fun LayoutListas2() {
+    val cores1alinha = listOf(
+        Color.Green,
+        Color.Red
+    )
+    val cores2alinha = listOf(
+        Color.Yellow,
+        Color.Blue
+    )
+
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        val modifierRow = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+        val modifierBox = Modifier
+            .fillMaxHeight()
+            .weight(1f)
+
+        Row(modifier = modifierRow) {
+            cores1alinha.forEach { cor ->
+                Box(
+                    modifier = modifierBox
+                        .then(Modifier.background(cor))
+                )
+            }
+        }
+        Row(modifier = modifierRow) {
+            cores2alinha.forEach { cor ->
+                Box(
+                    modifier = modifierBox
+                        .then(Modifier.background(cor))
+                )
+            }
         }
     }
 }
@@ -1074,7 +1143,7 @@ fun Ex3(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tela 3") },
+                title = { Text("Esta é o exercicio 3") },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -1088,13 +1157,41 @@ fun Ex3(navController: NavHostController) {
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Esta é o exercicio 3", style = MaterialTheme.typography.headlineLarge)
+            LayoutListas3() // Implementação do LayoutListas3
+        }
+    }
+}
+
+@Composable
+fun LayoutListas3() {
+    // Lista de cores para cada linha
+    val linhas = listOf(
+        listOf(Color.Red, Color.Red, Color.Red, Color.Green),    // Linha 1
+        listOf(Color.Red, Color.Red, Color.Blue, Color.Yellow),  // Linha 2
+        listOf(Color.Red, Color.Green, Color.Yellow, Color.Yellow), // Linha 3
+        listOf(Color.Blue, Color.Yellow, Color.Yellow, Color.Yellow), // Linha 4
+        listOf(Color.Green, Color.Green, Color.Red, Color.Yellow), // Linha 5
+        listOf(Color.Green, Color.Green, Color.Green, Color.Blue) // Linha 6
+    )
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        linhas.forEach { coresLinha ->
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)) {
+                coresLinha.forEach { cor ->
+                    Box(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(cor))
+                }
+            }
         }
     }
 }
@@ -1105,7 +1202,7 @@ fun Ex4(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tela 4") },
+                title = { Text("Esta é o exercicio 3") },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -1119,16 +1216,77 @@ fun Ex4(navController: NavHostController) {
             )
         }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Esta é o exercicio 4", style = MaterialTheme.typography.headlineLarge)
+            LayoutListas4() // Implementação do LayoutListas3
         }
     }
 }
+
+@Preview
+@Composable
+fun LayoutListas4() {
+    Column(modifier = Modifier.fillMaxSize()) {
+        //linha 1
+
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)) {
+            // Substituindo as boxes vermelhas com uma imagem
+            Image(
+                painter = painterResource(id = R.drawable.profile_icon), // sua imagem vermelha
+                contentDescription = "Imagem Vermelha",
+                modifier = Modifier
+                    .weight(6f)
+                    .fillMaxHeight()
+            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    val cores1alinha = listOf(
+                        Color.Green,
+                        Color.Red
+                    )
+                    val cores2alinha = listOf(
+                        Color.Yellow,
+                        Color.Blue
+                    )
+
+                    Column(modifier = Modifier.fillMaxSize()) {
+
+                        val modifierRow = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                        val modifierBox = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+
+                        Row(modifier = modifierRow) {
+                            cores1alinha.forEach { cor ->
+                                Box(
+                                    modifier = modifierBox
+                                        .then(Modifier.background(cor))
+                                )
+                            }
+                        }
+                        Row(modifier = modifierRow) {
+                            cores2alinha.forEach { cor ->
+                                Box(
+                                    modifier = modifierBox
+                                        .then(Modifier.background(cor))
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
