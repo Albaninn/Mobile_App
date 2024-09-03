@@ -483,9 +483,13 @@ fun Tela2Screen(navController: NavHostController, username: String) {
     var showInReais by remember { mutableStateOf(false) }
     var selectedMonth by remember { mutableStateOf<Month?>(null) }
 
-    val totalPositiveHours = calculateTotalPositiveHours(username)
-    val totalNegativeHours = calculateTotalNegativeHours(username)
+    // Estados para horas positivas e negativas
+    var totalPositiveHours by remember { mutableStateOf(calculateTotalPositiveHours(username)) }
+    var totalNegativeHours by remember { mutableStateOf(calculateTotalNegativeHours(username)) }
     val valorHora = 16.65
+
+    // Calcular a diferença entre horas positivas e negativas
+    val saldoHoras = totalPositiveHours - totalNegativeHours
 
     Scaffold(
         topBar = {
@@ -502,7 +506,14 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { isEditing = !isEditing }) {
+                    IconButton(onClick = {
+                        isEditing = !isEditing
+                        if (!isEditing) {
+                            // Recalcular os totais quando a edição é concluída
+                            totalPositiveHours = calculateTotalPositiveHours(username)
+                            totalNegativeHours = calculateTotalNegativeHours(username)
+                        }
+                    }) {
                         Icon(
                             imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
                             contentDescription = if (isEditing) "Salvar" else "Editar"
@@ -522,39 +533,28 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Center
             ) {
-                // Saldo Positivo
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ampfull),
-                        contentDescription = "Saldo Positivo",
+                        painter = painterResource(id = if (saldoHoras >= 0) R.drawable.ampfull else R.drawable.amp),
+                        contentDescription = if (saldoHoras >= 0) "Saldo Positivo" else "Saldo Negativo",
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
-                        text = if (showInReais) "R\$ ${String.format("%.2f", totalPositiveHours * valorHora)}" else "$totalPositiveHours h",
+                        text = if (showInReais) {
+                            "R\$ ${String.format("%.2f", saldoHoras * valorHora)}"
+                        } else {
+                            formatHoursToHHmm(saldoHoras)
+                        },
                         style = MaterialTheme.typography.headlineMedium
-                    )
-                    Text("Positivo", style = MaterialTheme.typography.bodySmall)
-                }
-
-
-                // Saldo Negativo
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.amp),
-                        contentDescription = "Saldo Negativo",
-                        modifier = Modifier.size(24.dp)
                     )
                     Text(
-                        text = if (showInReais) "R\$ ${String.format("%.2f", totalNegativeHours * valorHora)}" else "$totalNegativeHours h",
-                        style = MaterialTheme.typography.headlineMedium
+                        text = if (saldoHoras >= 0) "Saldo Positivo" else "Saldo Negativo",
+                        style = MaterialTheme.typography.bodySmall
                     )
-                    Text("Negativo", style = MaterialTheme.typography.bodySmall)
                 }
 
                 // Toggle entre Horas e Reais
@@ -565,7 +565,6 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                         modifier = Modifier.size(24.dp)
                     )
                 }
-
             }
 
             // Filtro por tempo
@@ -578,6 +577,19 @@ fun Tela2Screen(navController: NavHostController, username: String) {
             // Exibir a lista de registros de banco de horas do usuário logado
             WorkHoursList(username = username, isEditing = isEditing, selectedMonth = selectedMonth)
         }
+    }
+}
+
+// Função para formatar as horas em "HH:mm"
+@RequiresApi(Build.VERSION_CODES.O)
+fun formatHoursToHHmm(hours: Double): String {
+    val totalMinutes = (hours * 60).toInt()
+    val hh = totalMinutes / 60
+    val mm = totalMinutes % 60
+    return if (hours >= 0) {
+        "%02d:%02d".format(hh, mm)
+    } else {
+        "- %02d:%02d".format(-hh, -mm)
     }
 }
 
@@ -624,8 +636,14 @@ fun FilterByTime(selectedMonth: Month?, onMonthSelected: (Month?) -> Unit) {
 fun calculateTotalPositiveHours(username: String): Double {
     val userWorkDays = workHours[username] ?: emptyList()
     return userWorkDays.sumOf { workDay ->
-        val hours = workDay.totalAdjustedHours.replace("h", "").toDoubleOrNull() ?: 0.0
-        if (hours > 0) hours else 0.0
+        val totalHours = parseTime(workDay.totalAdjustedHours)
+        val standardHours = if (workDay.dayOfWeek.equals("sexta-feira", ignoreCase = true)) {
+            LocalTime.of(8, 0)
+        } else {
+            LocalTime.of(9, 0)
+        }
+        val positiveMinutes = ChronoUnit.MINUTES.between(standardHours, totalHours).takeIf { it > 0 } ?: 0
+        positiveMinutes / 60.0 + (positiveMinutes % 60) / 100.0
     }
 }
 
@@ -633,8 +651,14 @@ fun calculateTotalPositiveHours(username: String): Double {
 fun calculateTotalNegativeHours(username: String): Double {
     val userWorkDays = workHours[username] ?: emptyList()
     return userWorkDays.sumOf { workDay ->
-        val hours = workDay.totalAdjustedHours.replace("h", "").toDoubleOrNull() ?: 0.0
-        if (hours < 0) hours else 0.0
+        val totalHours = parseTime(workDay.totalAdjustedHours)
+        val standardHours = if (workDay.dayOfWeek.equals("sexta-feira", ignoreCase = true)) {
+            LocalTime.of(8, 0)
+        } else {
+            LocalTime.of(9, 0)
+        }
+        val negativeMinutes = ChronoUnit.MINUTES.between(totalHours, standardHours).takeIf { it > 0 } ?: 0
+        negativeMinutes / 60.0 + (negativeMinutes % 60) / 100.0
     }
 }
 
@@ -768,33 +792,6 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
                 )
             }
         }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun tryCalculateTotalAdjustedHours(entryTime: String, exitTime: String, dayOfWeek: String): String {
-    return try {
-        calculateTotalAdjustedHours(entryTime, exitTime, dayOfWeek)
-    } catch (e: Exception) {
-        "Erro"
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun tryCalculateCredit(totalHours: String, dayOfWeek: String): String {
-    return try {
-        calculateCredit(totalHours, dayOfWeek)
-    } catch (e: Exception) {
-        "Erro"
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun tryCalculateDebit(totalHours: String, dayOfWeek: String): String {
-    return try {
-        calculateDebit(totalHours, dayOfWeek)
-    } catch (e: Exception) {
-        "Erro"
     }
 }
 
