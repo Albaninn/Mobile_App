@@ -1,5 +1,6 @@
 package br.edu.up.test_app.ex
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -25,11 +28,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import br.edu.up.test_app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,12 +164,7 @@ fun Ex1(navController: NavHostController) {
 
 @Composable
 fun LayoutListas1() {
-    val coresalinha = listOf(
-        Color.Green,
-        Color.Red,
-        Color.Yellow,
-        Color.Blue
-    )
+    val coresalinha = listOf(Color.Green, Color.Red,Color.Yellow, Color.Blue)
 
     Row(modifier = Modifier.fillMaxSize()) {
 
@@ -218,14 +219,8 @@ fun Ex2(navController: NavHostController) {
 
 @Composable
 fun LayoutListas2() {
-    val cores1alinha = listOf(
-        Color.Green,
-        Color.Red
-    )
-    val cores2alinha = listOf(
-        Color.Yellow,
-        Color.Blue
-    )
+    val cores1alinha = listOf(Color.Green, Color.Red)
+    val cores2alinha = listOf(Color.Yellow, Color.Blue)
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -320,7 +315,7 @@ fun Ex4(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Esta é o exercicio 3") },
+                title = { Text("Esta é o exercicio 4") },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -340,7 +335,7 @@ fun Ex4(navController: NavHostController) {
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LayoutListas4() // Implementação do LayoutListas3
+            LayoutListas4() // Implementação do LayoutListas4
         }
     }
 }
@@ -348,11 +343,55 @@ fun Ex4(navController: NavHostController) {
 @Preview
 @Composable
 fun LayoutListas4() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)) {
+    val cores1alinha = listOf(Color.Green, Color.Red)
+    val cores2alinha = listOf(Color.Yellow, Color.Blue)
 
+    Row(modifier = Modifier.fillMaxSize()) {
+        // Primeira coluna (com a imagem)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.profile_icon),
+                contentDescription = "Foto de Perfil",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+            )
+        }
+        // Segunda coluna (com as cores)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            val modifierBox = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+            val modifierRow = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+            // Primeira linha de cores
+            Row(modifier = modifierRow) {
+                cores1alinha.forEach { cor ->
+                    Box(
+                        modifier = modifierBox
+                            .background(cor)
+                    )
+                }
+            }
+            // Segunda linha de cores
+            Row(modifier = modifierRow) {
+                cores2alinha.forEach { cor ->
+                    Box(
+                        modifier = modifierBox
+                            .background(cor)
+                    )
+                }
+            }
         }
     }
 }
+
