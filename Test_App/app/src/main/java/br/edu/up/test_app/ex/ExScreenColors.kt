@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -28,7 +26,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -344,54 +341,149 @@ fun Ex4(navController: NavHostController) {
 @Composable
 fun LayoutListas4() {
     val cores1alinha = listOf(Color.Green, Color.Red)
-    val cores2alinha = listOf(Color.Yellow, Color.Blue)
+    val cores2alinha = listOf(Color.Blue, Color.Yellow)
+    val cores3alinha = listOf(Color.Red, Color.Green)
 
-    Row(modifier = Modifier.fillMaxSize()) {
-        // Primeira coluna (com a imagem)
-        Column(
+    val cores5alinha = listOf(Color.Red, Color.Yellow)
+    val cores6alinha = listOf(Color.Green, Color.Blue)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        val modifierRow = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+        val modifierBox = Modifier
+            .fillMaxHeight()
+            .weight(1f)
+        // Primeira linha: Imagem à esquerda, cores à direita
+        Row(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
+                .fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.profile_icon),
-                contentDescription = "Foto de Perfil",
+            Column(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-            )
-        }
-        // Segunda coluna (com as cores)
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            val modifierBox = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-            val modifierRow = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-            // Primeira linha de cores
-            Row(modifier = modifierRow) {
-                cores1alinha.forEach { cor ->
-                    Box(
-                        modifier = modifierBox
-                            .background(cor)
-                    )
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile_icon),
+                    contentDescription = "Foto de Perfil",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Row(modifier = modifierRow) {
+                    cores1alinha.forEach { cor ->
+                        Box(
+                            modifier = modifierBox
+                                .then(Modifier.background(cor))
+                        )
+                    }
+                }
+                Row(modifier = modifierRow) {
+                    cores2alinha.forEach { cor ->
+                        Box(
+                            modifier = modifierBox
+                                .then(Modifier.background(cor))
+                        )
+                    }
                 }
             }
-            // Segunda linha de cores
-            Row(modifier = modifierRow) {
-                cores2alinha.forEach { cor ->
-                    Box(
-                        modifier = modifierBox
-                            .background(cor)
-                    )
+        }
+
+        // Segunda linha: Cores à esquerda, imagem à direita
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Row(modifier = modifierRow) {
+                    cores3alinha.forEach { cor ->
+                        Box(
+                            modifier = modifierBox
+                                .then(Modifier.background(cor))
+                        )
+                    }
+                }
+                Row(modifier = modifierRow) {
+                    cores2alinha.forEach { cor ->
+                        Box(
+                            modifier = modifierBox
+                                .then(Modifier.background(cor))
+                        )
+                    }
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile_icon),
+                    contentDescription = "Foto de Perfil",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+            }
+        }
+
+        // Terceira linha: Imagem à esquerda, cores à direita
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile_icon),
+                    contentDescription = "Foto de Perfil",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Row(modifier = modifierRow) {
+                    cores5alinha.forEach { cor ->
+                        Box(
+                            modifier = modifierBox
+                                .then(Modifier.background(cor))
+                        )
+                    }
+                }
+                Row(modifier = modifierRow) {
+                    cores6alinha.forEach { cor ->
+                        Box(
+                            modifier = modifierBox
+                                .then(Modifier.background(cor))
+                        )
+                    }
                 }
             }
         }
     }
 }
-
