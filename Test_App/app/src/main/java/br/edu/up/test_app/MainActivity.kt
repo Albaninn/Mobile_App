@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -530,12 +529,12 @@ fun Tela2Screen(navController: NavHostController, username: String) {
     var selectedMonth by remember { mutableStateOf<Month?>(null) }
 
     // Estados para horas positivas e negativas
-    var totalPositiveHours by remember { mutableStateOf(calculateTotalPositiveHours(username)) }
-    var totalNegativeHours by remember { mutableStateOf(calculateTotalNegativeHours(username)) }
+    val totalPositiveHours = remember { mutableStateOf(0.0) }
+    val totalNegativeHours = remember { mutableStateOf(0.0) }
     val valorHora = 16.65
 
     // Calcular a diferença entre horas positivas e negativas
-    val saldoHoras = totalPositiveHours - totalNegativeHours
+    val saldoHoras = totalPositiveHours.value - totalNegativeHours.value
 
     Scaffold(
         topBar = {
@@ -556,8 +555,8 @@ fun Tela2Screen(navController: NavHostController, username: String) {
                         isEditing = !isEditing
                         if (!isEditing) {
                             // Recalcular os totais quando a edição é concluída
-                            totalPositiveHours = calculateTotalPositiveHours(username)
-                            totalNegativeHours = calculateTotalNegativeHours(username)
+                            totalPositiveHours.value = calculateTotalPositiveHours(username, selectedMonth)
+                            totalNegativeHours.value = calculateTotalNegativeHours(username, selectedMonth)
                         }
                     }) {
                         Icon(
@@ -617,13 +616,195 @@ fun Tela2Screen(navController: NavHostController, username: String) {
             // Filtro por tempo
             FilterByTime(selectedMonth) { month ->
                 selectedMonth = month
+                // Resetar o saldo quando o mês for alterado
+                totalPositiveHours.value = 0.0
+                totalNegativeHours.value = 0.0
+
+                // Atualizar o saldo quando o mês for alterado
+                totalPositiveHours.value = calculateTotalPositiveHours(username, selectedMonth)
+                totalNegativeHours.value = calculateTotalNegativeHours(username, selectedMonth)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Exibir a lista de registros de banco de horas do usuário logado
-            WorkHoursList(username = username, isEditing = isEditing, selectedMonth = selectedMonth)
+            WorkHoursList(
+                username = username,
+                isEditing = isEditing,
+                selectedMonth = selectedMonth,
+                onTotalsChanged = { positive, negative ->
+                    totalPositiveHours.value = positive
+                    totalNegativeHours.value = negative
+                }
+            )
         }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WorkHoursList(
+    username: String,
+    isEditing: Boolean,
+    selectedMonth: Month?,
+    onTotalsChanged: (Double, Double) -> Unit
+) {
+    val workDays = workHours[username]?.sortedByDescending {
+        LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    }?.filter {
+        selectedMonth == null || LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy")).month == selectedMonth
+    } ?: emptyList()
+
+    var totalPositiveHours by remember { mutableStateOf(0.0) }
+    var totalNegativeHours by remember { mutableStateOf(0.0) }
+
+    // Resetar os totais antes de começar o cálculo
+    totalPositiveHours = 0.0
+    totalNegativeHours = 0.0
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Cabeçalho da tabela
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "Data", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Entrada", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Saída", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Total", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        }
+
+        Divider()
+
+        // Iterar sobre os dias de trabalho e calcular os créditos e débitos
+        workDays.forEach { workDay ->
+            val (positive, negative) = WorkDayItem(workDay, isEditing)
+            totalPositiveHours += positive
+            totalNegativeHours += negative
+            Divider()
+        }
+
+        // Atualizar o total de horas positivo e negativo após iterar
+        onTotalsChanged(totalPositiveHours, totalNegativeHours)
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WorkDayItem(workDay: WorkDay, isEditing: Boolean): Pair<Double, Double> {
+    var entryTime by remember { mutableStateOf(workDay.entryTime) }
+    var exitTime by remember { mutableStateOf(workDay.exitTime) }
+
+    // Função para validar e formatar as horas
+    fun parseAndFormatTime(time: String): String {
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("HH:mm")
+            val parsedTime = LocalTime.parse(time, formatter)
+            parsedTime.format(formatter)
+        } catch (e: Exception) {
+            "Invalid"
+        }
+    }
+
+    // Recalcula total de horas, crédito e débito toda vez que as horas são editadas
+    val totalHours by remember(entryTime, exitTime) {
+        mutableStateOf(
+            if (parseAndFormatTime(entryTime) != "Invalid" && parseAndFormatTime(exitTime) != "Invalid") {
+                calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
+            } else {
+                "Invalid"
+            }
+        )
+    }
+    val credit by remember(totalHours) {
+        mutableStateOf(
+            if (totalHours != "Invalid") calculateCredit(totalHours, workDay.dayOfWeek) else "00:00"
+        )
+    }
+    val debit by remember(totalHours) {
+        mutableStateOf(
+            if (totalHours != "Invalid") calculateDebit(totalHours, workDay.dayOfWeek) else "00:00"
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Coluna de Data e Dia da Semana
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = workDay.date, style = MaterialTheme.typography.bodyMedium)
+            Text(text = workDay.dayOfWeek, style = MaterialTheme.typography.bodySmall)
+        }
+
+        // Coluna de Entrada
+        if (isEditing) {
+            OutlinedTextField(
+                value = entryTime,
+                onValueChange = { newTime ->
+                    entryTime = newTime
+                },
+                label = { Text("Entrada") },
+                singleLine = true,
+                isError = parseAndFormatTime(entryTime) == "Invalid",
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        }
+
+        // Coluna de Saída
+        if (isEditing) {
+            OutlinedTextField(
+                value = exitTime,
+                onValueChange = { newTime ->
+                    exitTime = newTime
+                },
+                label = { Text("Saída") },
+                singleLine = true,
+                isError = parseAndFormatTime(exitTime) == "Invalid",
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        }
+
+        // Coluna de Total de Horas e Crédito/Débito
+        Column(modifier = Modifier.weight(1f)) {
+            if (totalHours == "Invalid") {
+                Text(text = "Erro", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            } else {
+                Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+
+    // Retornar os valores de crédito e débito para atualização do saldo total
+    val creditDouble = parseTimeToDouble(credit)
+    val debitDouble = parseTimeToDouble(debit)
+    return Pair(creditDouble, debitDouble)
+}
+
+// Função para converter o valor de crédito/débito para Double
+fun parseTimeToDouble(time: String): Double {
+    return try {
+        val parts = time.split(":")
+        val hours = parts[0].toInt()
+        val minutes = parts[1].toInt()
+        hours + (minutes / 60.0)
+    } catch (e: Exception) {
+        0.0
     }
 }
 
@@ -680,7 +861,7 @@ fun FilterByTime(selectedMonth: Month?, onMonthSelected: (Month?) -> Unit) {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun calculateTotalPositiveHours(username: String): Double {
+fun calculateTotalPositiveHours(username: String, selectedMonth: Month?): Double {
     val userWorkDays = workHours[username] ?: emptyList()
     return userWorkDays.sumOf { workDay ->
         val totalHours = parseTime(workDay.totalAdjustedHours)
@@ -695,7 +876,7 @@ fun calculateTotalPositiveHours(username: String): Double {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun calculateTotalNegativeHours(username: String): Double {
+fun calculateTotalNegativeHours(username: String, selectedMonth: Month?): Double {
     val userWorkDays = workHours[username] ?: emptyList()
     return userWorkDays.sumOf { workDay ->
         val totalHours = parseTime(workDay.totalAdjustedHours)
@@ -706,117 +887,6 @@ fun calculateTotalNegativeHours(username: String): Double {
         }
         val negativeMinutes = ChronoUnit.MINUTES.between(totalHours, standardHours).takeIf { it > 0 } ?: 0
         negativeMinutes / 60.0 + (negativeMinutes % 60) / 100.0
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun WorkHoursList(username: String, selectedMonth: Month?, isEditing: Boolean) {
-    val workDays = workHours[username]?.sortedByDescending {
-        LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    }?.filter {
-        selectedMonth == null || LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy")).month == selectedMonth
-    } ?: emptyList()
-
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Cabeçalho da tabela
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = "Data", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Entrada", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Saída", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Total", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        }
-
-        Divider()
-
-        // Itens da tabela
-        workDays.forEach { workDay ->
-            WorkDayItem(workDay)
-            Divider()
-        }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun WorkDayItem(workDay: WorkDay) {
-    var showDialog by remember { mutableStateOf(false) }
-
-    // Estado local para controlar os horários editados
-    var entryTime by remember { mutableStateOf(workDay.entryTime) }
-    var exitTime by remember { mutableStateOf(workDay.exitTime) }
-
-    // Função para recalcular o total de horas sempre que os horários mudam
-    val totalHours by remember(entryTime, exitTime) {
-        mutableStateOf(calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek))
-    }
-
-    // Calcular se é crédito ou débito com base nas horas trabalhadas
-    val credit by remember(totalHours) {
-        mutableStateOf(
-            if (totalHours != "Invalid") calculateCredit(totalHours, workDay.dayOfWeek) else "00:00"
-        )
-    }
-    val debit by remember(totalHours) {
-        mutableStateOf(
-            if (totalHours != "Invalid") calculateDebit(totalHours, workDay.dayOfWeek) else "00:00"
-        )
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { showDialog = true }, // Ao clicar, abre o diálogo
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = workDay.date, style = MaterialTheme.typography.bodyMedium)
-            Text(text = workDay.dayOfWeek, style = MaterialTheme.typography.bodySmall)
-        }
-
-        Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-
-        // Exibir o total e se é crédito ou débito
-        Column(modifier = Modifier.weight(1f)) {
-            if (totalHours == "Invalid") {
-                Text(text = "Erro", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-            } else {
-                // Mostrar o total e crédito ou débito
-                Text(
-                    text = totalHours,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (credit != "00:00") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    }
-
-    // Exibir o diálogo de edição quando o estado showDialog for verdadeiro
-    if (showDialog) {
-        EditTimeDialog(
-            workDay = workDay,
-            entryTime = entryTime,
-            exitTime = exitTime,
-            onDismiss = { showDialog = false },
-            onSave = { newEntryTime, newExitTime ->
-                entryTime = newEntryTime
-                exitTime = newExitTime
-                showDialog = false
-            }
-        )
     }
 }
 
@@ -896,6 +966,20 @@ data class WorkDay(
     val credit: String = calculateCredit(totalAdjustedHours, dayOfWeek)
     @RequiresApi(Build.VERSION_CODES.O)
     val debit: String = calculateDebit(totalAdjustedHours, dayOfWeek)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateAdjustedTotal(credit: String, debit: String): String {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    val creditTime = if (credit != "00:00") LocalTime.parse(credit, formatter) else LocalTime.of(0, 0)
+    val debitTime = if (debit != "00:00") LocalTime.parse(debit, formatter) else LocalTime.of(0, 0)
+
+    // Subtrair débito do crédito para obter o saldo
+    val adjustedMinutes = creditTime.toSecondOfDay() - debitTime.toSecondOfDay()
+    val adjustedTime = LocalTime.ofSecondOfDay(adjustedMinutes.toLong())
+
+    return adjustedTime.format(formatter)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
