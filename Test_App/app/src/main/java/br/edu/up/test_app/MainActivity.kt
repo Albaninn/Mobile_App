@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -94,108 +95,6 @@ data class UserProfile(
 @RequiresApi(Build.VERSION_CODES.O)
 val workHours = mutableMapOf(
     "l.serenato" to mutableListOf(
-        WorkDay("04/03/2024", "08:00", "18:00"),
-        WorkDay("05/03/2024", "08:00", "17:56"),
-        WorkDay("06/03/2024", "07:31", "18:02"),
-        WorkDay("07/03/2024", "08:19", "17:44"),
-        WorkDay("08/03/2024", "07:28", "18:01"),
-        WorkDay("11/03/2024", "08:21", "17:35"),
-        WorkDay("12/03/2024", "08:27", "17:49"),
-        WorkDay("13/03/2024", "07:21", "17:59"),
-        WorkDay("14/03/2024", "07:25", "17:52"),
-        WorkDay("15/03/2024", "07:29", "17:54"),
-        WorkDay("18/03/2024", "08:31", "17:55"),
-        WorkDay("19/03/2024", "08:21", "17:34"),
-        WorkDay("21/03/2024", "07:28", "18:14"),
-        WorkDay("22/03/2024", "07:44", "16:54"),
-        WorkDay("25/03/2024", "08:19", "17:41"),
-        WorkDay("26/03/2024", "08:25", "17:50"),
-        WorkDay("27/03/2024", "07:30", "17:49"),
-        WorkDay("28/03/2024", "07:28", "18:20"),
-        WorkDay("01/04/2024", "08:21", "17:52"),
-        WorkDay("02/04/2024", "08:21", "17:51"),
-        WorkDay("03/04/2024", "07:39", "17:57"),
-        WorkDay("04/04/2024", "07:51", "18:07"),
-        WorkDay("05/04/2024", "08:02", "17:59"),
-        WorkDay("08/04/2024", "08:18", "17:51"),
-        WorkDay("09/04/2024", "08:25", "17:53"),
-        WorkDay("10/04/2024", "07:37", "17:58"),
-        WorkDay("11/04/2024", "07:40", "18:02"),
-        WorkDay("12/04/2024", "08:29", "17:57"),
-        WorkDay("15/04/2024", "08:28", "17:48"),
-        WorkDay("16/04/2024", "08:17", "17:51"),
-        WorkDay("17/04/2024", "07:30", "18:07"),
-        WorkDay("18/04/2024", "07:25", "17:37"),
-        WorkDay("19/04/2024", "08:19", "17:53"),
-        WorkDay("22/04/2024", "08:19", "17:55"),
-        WorkDay("23/04/2024", "08:21", "17:50"),
-        WorkDay("24/04/2024", "07:30", "18:02"),
-        WorkDay("25/04/2024", "07:26", "18:00"),
-        WorkDay("26/04/2024", "07:22", "17:55"),
-        WorkDay("29/04/2024", "08:18", "17:51"),
-        WorkDay("30/04/2024", "07:27", "18:08"),
-        WorkDay("02/05/2024", "07:25", "18:02"),
-        WorkDay("03/05/2024", "07:48", "18:03"),
-        WorkDay("06/05/2024", "08:17", "17:53"),
-        WorkDay("07/05/2024", "08:16", "17:50"),
-        WorkDay("08/05/2024", "07:31", "18:02"),
-        WorkDay("09/05/2024", "07:30", "18:00"),
-        WorkDay("10/05/2024", "08:00", "17:07"),
-        WorkDay("13/05/2024", "08:17", "17:44"),
-        WorkDay("14/05/2024", "08:22", "17:47"),
-        WorkDay("15/05/2024", "07:33", "18:00"),
-        WorkDay("16/05/2024", "07:31", "18:11"),
-        WorkDay("20/05/2024", "07:45", "17:29"),
-        WorkDay("21/05/2024", "08:27", "17:46"),
-        WorkDay("22/05/2024", "07:54", "18:14"),
-        WorkDay("23/05/2024", "07:31", "18:10"),
-        WorkDay("27/05/2024", "08:41", "17:46"),
-        WorkDay("28/05/2024", "08:35", "17:54"),
-        WorkDay("29/05/2024", "07:26", "17:40"),
-        WorkDay("31/05/2024", "07:43", "18:07"),
-        WorkDay("03/06/2024", "07:27", "17:55"),
-        WorkDay("04/06/2024", "07:20", "17:32"),
-        WorkDay("05/06/2024", "07:30", "18:06"),
-        WorkDay("06/06/2024", "07:23", "17:51"),
-        WorkDay("07/06/2024", "08:33", "17:38"),
-        WorkDay("10/06/2024", "07:35", "18:05"),
-        WorkDay("11/06/2024", "07:29", "18:08"),
-        WorkDay("12/06/2024", "07:28", "17:50"),
-        WorkDay("13/06/2024", "07:25", "17:45"),
-        WorkDay("14/06/2024", "08:05", "18:10"),
-        WorkDay("17/06/2024", "07:56", "17:47"),
-        WorkDay("18/06/2024", "07:31", "18:25"),
-        WorkDay("19/06/2024", "07:49", "18:00"),
-        WorkDay("20/06/2024", "07:46", "18:16"),
-        WorkDay("21/06/2024", "07:52", "18:05"),
-        WorkDay("24/06/2024", "08:24", "17:49"),
-        WorkDay("25/06/2024", "08:25", "17:57"),
-        WorkDay("26/06/2024", "07:45", "17:50"),
-        WorkDay("27/06/2024", "07:14", "17:20"),
-        WorkDay("28/06/2024", "08:03", "18:07"),
-        WorkDay("01/07/2024", "07:56", "17:49"),
-        WorkDay("02/07/2024", "08:04", "17:49"),
-        WorkDay("03/07/2024", "08:01", "17:44"),
-        WorkDay("04/07/2024", "07:54", "18:10"),
-        WorkDay("05/07/2024", "07:57", "17:56"),
-        WorkDay("08/07/2024", "08:08", "17:49"),
-        WorkDay("09/07/2024", "07:41", "17:42"),
-        WorkDay("10/07/2024", "07:26", "18:09"),
-        WorkDay("11/07/2024", "07:45", "18:23"),
-        WorkDay("12/07/2024", "08:23", "17:23"),
-        WorkDay("15/07/2024", "07:57", "17:33"),
-        WorkDay("16/07/2024", "07:25", "18:04"),
-        WorkDay("17/07/2024", "07:30", "18:08"),
-        WorkDay("18/07/2024", "08:26", "18:00"),
-        WorkDay("19/07/2024", "08:20", "17:55"),
-        WorkDay("22/07/2024", "07:57", "17:46"),
-        WorkDay("23/07/2024", "08:32", "17:54"),
-        WorkDay("24/07/2024", "07:25", "18:18"),
-        WorkDay("25/07/2024", "07:33", "17:50"),
-        WorkDay("26/07/2024", "07:53", "17:36"),
-        WorkDay("29/07/2024", "08:10", "17:35"),
-        WorkDay("30/07/2024", "08:07", "17:47"),
-        WorkDay("31/07/2024", "07:40", "18:19"),
         WorkDay("01/08/2024", "07:25", "18:15"),
         WorkDay("02/08/2024", "07:57", "17:33"),
         WorkDay("05/08/2024", "08:38", "17:45"),
@@ -728,7 +627,6 @@ fun Tela2Screen(navController: NavHostController, username: String) {
     }
 }
 
-
 // Função para formatar as horas em "HH:mm"
 @RequiresApi(Build.VERSION_CODES.O)
 fun formatHoursToHHmm(hours: Double): String {
@@ -813,7 +711,7 @@ fun calculateTotalNegativeHours(username: String): Double {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
+fun WorkHoursList(username: String, selectedMonth: Month?, isEditing: Boolean) {
     val workDays = workHours[username]?.sortedByDescending {
         LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     }?.filter {
@@ -840,7 +738,7 @@ fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
 
         // Itens da tabela
         workDays.forEach { workDay ->
-            WorkDayItem(workDay, isEditing)
+            WorkDayItem(workDay)
             Divider()
         }
     }
@@ -848,31 +746,19 @@ fun WorkHoursList(username: String, isEditing: Boolean, selectedMonth: Month?) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
+fun WorkDayItem(workDay: WorkDay) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    // Estado local para controlar os horários editados
     var entryTime by remember { mutableStateOf(workDay.entryTime) }
     var exitTime by remember { mutableStateOf(workDay.exitTime) }
 
-    // Função para validar e formatar as horas
-    fun parseAndFormatTime(time: String): String {
-        return try {
-            val formatter = DateTimeFormatter.ofPattern("HH:mm")
-            val parsedTime = LocalTime.parse(time, formatter)
-            parsedTime.format(formatter)
-        } catch (e: Exception) {
-            "Invalid"
-        }
+    // Função para recalcular o total de horas sempre que os horários mudam
+    val totalHours by remember(entryTime, exitTime) {
+        mutableStateOf(calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek))
     }
 
-    // Recalcula total de horas, crédito e débito toda vez que as horas são editadas
-    val totalHours by remember(entryTime, exitTime) {
-        mutableStateOf(
-            if (parseAndFormatTime(entryTime) != "Invalid" && parseAndFormatTime(exitTime) != "Invalid") {
-                calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
-            } else {
-                "Invalid"
-            }
-        )
-    }
+    // Calcular se é crédito ou débito com base nas horas trabalhadas
     val credit by remember(totalHours) {
         mutableStateOf(
             if (totalHours != "Invalid") calculateCredit(totalHours, workDay.dayOfWeek) else "00:00"
@@ -887,53 +773,28 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { showDialog = true }, // Ao clicar, abre o diálogo
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Coluna de Data e Dia da Semana
         Column(modifier = Modifier.weight(1f)) {
             Text(text = workDay.date, style = MaterialTheme.typography.bodyMedium)
             Text(text = workDay.dayOfWeek, style = MaterialTheme.typography.bodySmall)
         }
 
-        // Coluna de Entrada
-        if (isEditing) {
-            OutlinedTextField(
-                value = entryTime,
-                onValueChange = { newTime ->
-                    entryTime = newTime
-                },
-                label = { Text("Entrada") },
-                singleLine = true,
-                isError = parseAndFormatTime(entryTime) == "Invalid",
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        }
+        Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
 
-        // Coluna de Saída
-        if (isEditing) {
-            OutlinedTextField(
-                value = exitTime,
-                onValueChange = { newTime ->
-                    exitTime = newTime
-                },
-                label = { Text("Saída") },
-                singleLine = true,
-                isError = parseAndFormatTime(exitTime) == "Invalid",
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        }
-
-        // Coluna de Total de Horas e Crédito/Débito
+        // Exibir o total e se é crédito ou débito
         Column(modifier = Modifier.weight(1f)) {
             if (totalHours == "Invalid") {
                 Text(text = "Erro", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             } else {
-                Text(text = totalHours, style = MaterialTheme.typography.bodyMedium)
+                // Mostrar o total e crédito ou débito
+                Text(
+                    text = totalHours,
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Text(
                     text = if (credit != "00:00") "$credit Crédito" else "$debit Débito",
                     style = MaterialTheme.typography.bodySmall,
@@ -942,6 +803,82 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean) {
             }
         }
     }
+
+    // Exibir o diálogo de edição quando o estado showDialog for verdadeiro
+    if (showDialog) {
+        EditTimeDialog(
+            workDay = workDay,
+            entryTime = entryTime,
+            exitTime = exitTime,
+            onDismiss = { showDialog = false },
+            onSave = { newEntryTime, newExitTime ->
+                entryTime = newEntryTime
+                exitTime = newExitTime
+                showDialog = false
+            }
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun EditTimeDialog(
+    workDay: WorkDay,
+    entryTime: String,
+    exitTime: String,
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var newEntryTime by remember { mutableStateOf(entryTime) }
+    var newExitTime by remember { mutableStateOf(exitTime) }
+
+    // Função para validar os horários
+    fun isValidTime(time: String): Boolean {
+        return try {
+            LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Editar Horários") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = newEntryTime,
+                    onValueChange = { newEntryTime = it },
+                    label = { Text("Horário de Entrada") },
+                    isError = !isValidTime(newEntryTime)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newExitTime,
+                    onValueChange = { newExitTime = it },
+                    label = { Text("Horário de Saída") },
+                    isError = !isValidTime(newExitTime)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (isValidTime(newEntryTime) && isValidTime(newExitTime)) {
+                        onSave(newEntryTime, newExitTime)
+                    }
+                }
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
