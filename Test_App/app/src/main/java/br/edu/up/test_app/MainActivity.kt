@@ -8,7 +8,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -92,11 +94,137 @@ data class UserProfile(
 @RequiresApi(Build.VERSION_CODES.O)
 val workHours = mutableMapOf(
     "l.serenato" to mutableListOf(
+        WorkDay("04/03/2024", "08:00", "18:00"),
+        WorkDay("05/03/2024", "08:00", "17:56"),
+        WorkDay("06/03/2024", "07:31", "18:02"),
+        WorkDay("07/03/2024", "08:19", "17:44"),
+        WorkDay("08/03/2024", "07:28", "18:01"),
+        WorkDay("11/03/2024", "08:21", "17:35"),
+        WorkDay("12/03/2024", "08:27", "17:49"),
+        WorkDay("13/03/2024", "07:21", "17:59"),
+        WorkDay("14/03/2024", "07:25", "17:52"),
+        WorkDay("15/03/2024", "07:29", "17:54"),
+        WorkDay("18/03/2024", "08:31", "17:55"),
+        WorkDay("19/03/2024", "08:21", "17:34"),
+        WorkDay("21/03/2024", "07:28", "18:14"),
+        WorkDay("22/03/2024", "07:44", "16:54"),
+        WorkDay("25/03/2024", "08:19", "17:41"),
+        WorkDay("26/03/2024", "08:25", "17:50"),
+        WorkDay("27/03/2024", "07:30", "17:49"),
+        WorkDay("28/03/2024", "07:28", "18:20"),
+        WorkDay("01/04/2024", "08:21", "17:52"),
+        WorkDay("02/04/2024", "08:21", "17:51"),
+        WorkDay("03/04/2024", "07:39", "17:57"),
+        WorkDay("04/04/2024", "07:51", "18:07"),
+        WorkDay("05/04/2024", "08:02", "17:59"),
+        WorkDay("08/04/2024", "08:18", "17:51"),
+        WorkDay("09/04/2024", "08:25", "17:53"),
+        WorkDay("10/04/2024", "07:37", "17:58"),
+        WorkDay("11/04/2024", "07:40", "18:02"),
+        WorkDay("12/04/2024", "08:29", "17:57"),
+        WorkDay("15/04/2024", "08:28", "17:48"),
+        WorkDay("16/04/2024", "08:17", "17:51"),
+        WorkDay("17/04/2024", "07:30", "18:07"),
+        WorkDay("18/04/2024", "07:25", "17:37"),
+        WorkDay("19/04/2024", "08:19", "17:53"),
+        WorkDay("22/04/2024", "08:19", "17:55"),
+        WorkDay("23/04/2024", "08:21", "17:50"),
+        WorkDay("24/04/2024", "07:30", "18:02"),
+        WorkDay("25/04/2024", "07:26", "18:00"),
+        WorkDay("26/04/2024", "07:22", "17:55"),
+        WorkDay("29/04/2024", "08:18", "17:51"),
+        WorkDay("30/04/2024", "07:27", "18:08"),
+        WorkDay("02/05/2024", "07:25", "18:02"),
+        WorkDay("03/05/2024", "07:48", "18:03"),
+        WorkDay("06/05/2024", "08:17", "17:53"),
+        WorkDay("07/05/2024", "08:16", "17:50"),
+        WorkDay("08/05/2024", "07:31", "18:02"),
+        WorkDay("09/05/2024", "07:30", "18:00"),
+        WorkDay("10/05/2024", "08:00", "17:07"),
+        WorkDay("13/05/2024", "08:17", "17:44"),
+        WorkDay("14/05/2024", "08:22", "17:47"),
+        WorkDay("15/05/2024", "07:33", "18:00"),
+        WorkDay("16/05/2024", "07:31", "18:11"),
+        WorkDay("20/05/2024", "07:45", "17:29"),
+        WorkDay("21/05/2024", "08:27", "17:46"),
+        WorkDay("22/05/2024", "07:54", "18:14"),
+        WorkDay("23/05/2024", "07:31", "18:10"),
+        WorkDay("27/05/2024", "08:41", "17:46"),
+        WorkDay("28/05/2024", "08:35", "17:54"),
+        WorkDay("29/05/2024", "07:26", "17:40"),
+        WorkDay("31/05/2024", "07:43", "18:07"),
+        WorkDay("03/06/2024", "07:27", "17:55"),
+        WorkDay("04/06/2024", "07:20", "17:32"),
+        WorkDay("05/06/2024", "07:30", "18:06"),
+        WorkDay("06/06/2024", "07:23", "17:51"),
+        WorkDay("07/06/2024", "08:33", "17:38"),
+        WorkDay("10/06/2024", "07:35", "18:05"),
+        WorkDay("11/06/2024", "07:29", "18:08"),
+        WorkDay("12/06/2024", "07:28", "17:50"),
+        WorkDay("13/06/2024", "07:25", "17:45"),
+        WorkDay("14/06/2024", "08:05", "18:10"),
+        WorkDay("17/06/2024", "07:56", "17:47"),
+        WorkDay("18/06/2024", "07:31", "18:25"),
+        WorkDay("19/06/2024", "07:49", "18:00"),
+        WorkDay("20/06/2024", "07:46", "18:16"),
+        WorkDay("21/06/2024", "07:52", "18:05"),
+        WorkDay("24/06/2024", "08:24", "17:49"),
+        WorkDay("25/06/2024", "08:25", "17:57"),
+        WorkDay("26/06/2024", "07:45", "17:50"),
+        WorkDay("27/06/2024", "07:14", "17:20"),
+        WorkDay("28/06/2024", "08:03", "18:07"),
+        WorkDay("01/07/2024", "07:56", "17:49"),
+        WorkDay("02/07/2024", "08:04", "17:49"),
+        WorkDay("03/07/2024", "08:01", "17:44"),
+        WorkDay("04/07/2024", "07:54", "18:10"),
+        WorkDay("05/07/2024", "07:57", "17:56"),
+        WorkDay("08/07/2024", "08:08", "17:49"),
+        WorkDay("09/07/2024", "07:41", "17:42"),
+        WorkDay("10/07/2024", "07:26", "18:09"),
+        WorkDay("11/07/2024", "07:45", "18:23"),
+        WorkDay("12/07/2024", "08:23", "17:23"),
+        WorkDay("15/07/2024", "07:57", "17:33"),
+        WorkDay("16/07/2024", "07:25", "18:04"),
+        WorkDay("17/07/2024", "07:30", "18:08"),
+        WorkDay("18/07/2024", "08:26", "18:00"),
+        WorkDay("19/07/2024", "08:20", "17:55"),
+        WorkDay("22/07/2024", "07:57", "17:46"),
+        WorkDay("23/07/2024", "08:32", "17:54"),
+        WorkDay("24/07/2024", "07:25", "18:18"),
+        WorkDay("25/07/2024", "07:33", "17:50"),
+        WorkDay("26/07/2024", "07:53", "17:36"),
+        WorkDay("29/07/2024", "08:10", "17:35"),
+        WorkDay("30/07/2024", "08:07", "17:47"),
+        WorkDay("31/07/2024", "07:40", "18:19"),
+        WorkDay("01/08/2024", "07:25", "18:15"),
+        WorkDay("02/08/2024", "07:57", "17:33"),
+        WorkDay("05/08/2024", "08:38", "17:45"),
+        WorkDay("06/08/2024", "08:12", "17:53"),
+        WorkDay("07/08/2024", "07:20", "18:05"),
+        WorkDay("08/08/2024", "07:30", "18:15"),
+        WorkDay("09/08/2024", "07:29", "15:49"),
+        WorkDay("12/08/2024", "08:15", "17:47"),
+        WorkDay("13/08/2024", "08:17", "17:38"),
+        WorkDay("14/08/2024", "07:18", "18:10"),
+        WorkDay("15/08/2024", "07:10", "18:10"),
         WorkDay("16/08/2024", "07:48", "18:02"),
-        WorkDay("14/08/2024", "07:58", "18:00"),
-        WorkDay("13/08/2024", "07:38", "17:20"),
-        WorkDay("12/08/2024", "07:45", "18:00"),
-        WorkDay("15/08/2024", "08:00", "12:00")
+        WorkDay("19/08/2024", "08:15", "17:43"),
+        WorkDay("20/08/2024", "08:18", "17:41"),
+        WorkDay("21/08/2024", "07:04", "18:03"),
+        WorkDay("22/08/2024", "07:13", "18:03"),
+        WorkDay("23/08/2024", "07:55", "17:46"),
+        WorkDay("26/08/2024", "08:04", "17:47"),
+        WorkDay("27/08/2024", "09:53", "17:28"),
+        WorkDay("28/08/2024", "08:32", "18:16"),
+        WorkDay("29/08/2024", "07:13", "18:05"),
+        WorkDay("30/08/2024", "08:56", "16:23"),
+        WorkDay("02/09/2024", "08:35", "17:38"),
+        WorkDay("03/09/2024", "09:27", "17:33"),
+        WorkDay("04/09/2024", "07:24", "17:45"),
+        WorkDay("05/09/2024", "07:55", "18:06"),
+        WorkDay("06/09/2024", "09:33", "16:06"),
+        WorkDay("09/09/2024", "08:38", "12:00")
+
     ),
     "lorenna.j" to mutableListOf(
         WorkDay("16/08/2024", "08:15", "17:30")
@@ -154,9 +282,12 @@ fun RegistrationScreen(navController: NavHostController) {
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // Permite rolagem
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
+            verticalArrangement = Arrangement.Center
         ) {
             Text(text = "Bem-vindo", style = MaterialTheme.typography.headlineLarge)
 
@@ -268,7 +399,10 @@ fun LoginScreen(navController: NavHostController) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // Permite rolagem
+                .padding(16.dp)
         ) {
             Text(text = "Login", style = MaterialTheme.typography.headlineLarge)
 
@@ -446,6 +580,7 @@ fun MainScreen(navController: NavHostController, username: String, isDarkTheme: 
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())  // Permite rolagem
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
@@ -461,7 +596,7 @@ fun Tela1Screen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tela 1") },
+                title = { Text("Administrativo") },
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
@@ -478,6 +613,7 @@ fun Tela1Screen(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // Permite rolagem
                 .padding(padding),
             contentAlignment = Alignment.Center
         ) {
@@ -537,6 +673,7 @@ fun Tela2Screen(navController: NavHostController, username: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // Habilita rolagem
                 .padding(padding)
         ) {
             // Saldo do Banco de Horas
@@ -590,6 +727,7 @@ fun Tela2Screen(navController: NavHostController, username: String) {
         }
     }
 }
+
 
 // Função para formatar as horas em "HH:mm"
 @RequiresApi(Build.VERSION_CODES.O)
@@ -906,6 +1044,7 @@ fun Tela3Screen(navController: NavHostController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // Permite rolagem
                 .padding(padding),
             contentAlignment = Alignment.Center
         ) {
@@ -964,6 +1103,7 @@ fun ProfileScreen(navController: NavHostController, username: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())  // Permite rolagem
                 .padding(padding),
             contentAlignment = Alignment.Center
         ) {
