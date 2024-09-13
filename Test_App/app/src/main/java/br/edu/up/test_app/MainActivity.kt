@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -121,11 +122,15 @@ val workHours = mutableMapOf(
         WorkDay("04/09/2024", "07:24", "17:45"),
         WorkDay("05/09/2024", "07:55", "18:06"),
         WorkDay("06/09/2024", "09:33", "16:06"),
-        WorkDay("09/09/2024", "08:38", "12:00")
+        WorkDay("09/09/2024", "08:38", "18:00")
 
     ),
     "lorenna.j" to mutableListOf(
-        WorkDay("16/08/2024", "08:15", "17:30")
+        WorkDay("16/08/2024", "08:15", "17:30"),
+        WorkDay("04/09/2024", "07:24", "19:45"),
+        WorkDay("05/09/2024", "07:55", "18:06"),
+        WorkDay("06/09/2024", "09:33", "16:06"),
+        WorkDay("09/09/2024", "08:38", "18:00")
     )
 )
 
@@ -630,7 +635,6 @@ fun Tela2Screen(navController: NavHostController, username: String) {
             // Exibir a lista de registros de banco de horas do usuário logado
             WorkHoursList(
                 username = username,
-                isEditing = isEditing,
                 selectedMonth = selectedMonth,
                 onTotalsChanged = { positive, negative ->
                     totalPositiveHours.value = positive
@@ -645,7 +649,6 @@ fun Tela2Screen(navController: NavHostController, username: String) {
 @Composable
 fun WorkHoursList(
     username: String,
-    isEditing: Boolean,
     selectedMonth: Month?,
     onTotalsChanged: (Double, Double) -> Unit
 ) {
@@ -655,12 +658,26 @@ fun WorkHoursList(
         selectedMonth == null || LocalDate.parse(it.date, DateTimeFormatter.ofPattern("dd/MM/yyyy")).month == selectedMonth
     } ?: emptyList()
 
+    // Aqui armazenamos os valores totais atualizados
     var totalPositiveHours by remember { mutableStateOf(0.0) }
     var totalNegativeHours by remember { mutableStateOf(0.0) }
 
-    // Resetar os totais antes de começar o cálculo
-    totalPositiveHours = 0.0
-    totalNegativeHours = 0.0
+    // Função para recalcular o total de horas sempre que necessário
+    fun recalculateTotals() {
+        totalPositiveHours = 0.0
+        totalNegativeHours = 0.0
+
+        workDays.forEach { workDay ->
+            val totalHours = calculateTotalAdjustedHours(workDay.entryTime, workDay.exitTime, workDay.dayOfWeek)
+            val credit = calculateCredit(totalHours, workDay.dayOfWeek)
+            val debit = calculateDebit(totalHours, workDay.dayOfWeek)
+
+            totalPositiveHours += parseTimeToDouble(credit)
+            totalNegativeHours += parseTimeToDouble(debit)
+        }
+        // Atualiza os totais na tela
+        onTotalsChanged(totalPositiveHours, totalNegativeHours)
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -680,24 +697,35 @@ fun WorkHoursList(
 
         Divider()
 
-        // Iterar sobre os dias de trabalho e calcular os créditos e débitos
+        // Iterar sobre os dias de trabalho e exibir
         workDays.forEach { workDay ->
-            val (positive, negative) = WorkDayItem(workDay, isEditing)
-            totalPositiveHours += positive
-            totalNegativeHours += negative
+            br.edu.up.test_app.WorkDayItem(
+                workDay = workDay,
+                onSave = { newEntryTime, newExitTime ->
+                    // Atualizar as horas no mapa de workHours
+                    workDay.entryTime = newEntryTime
+                    workDay.exitTime = newExitTime
+
+                    // Recalcular os totais após a atualização dos horários
+                    recalculateTotals()
+                })
             Divider()
         }
-
-        // Atualizar o total de horas positivo e negativo após iterar
-        onTotalsChanged(totalPositiveHours, totalNegativeHours)
     }
+
+    // Recalcula os totais inicialmente
+    recalculateTotals()
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkDayItem(workDay: WorkDay, isEditing: Boolean): Pair<Double, Double> {
+fun WorkDayItem(
+    workDay: WorkDay,
+    onSave: (String, String) -> Unit
+) {
     var entryTime by remember { mutableStateOf(workDay.entryTime) }
     var exitTime by remember { mutableStateOf(workDay.exitTime) }
+    var showDialog by remember { mutableStateOf(false) } // Controla o estado do diálogo
 
     // Função para validar e formatar as horas
     fun parseAndFormatTime(time: String): String {
@@ -710,31 +738,11 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean): Pair<Double, Double> {
         }
     }
 
-    // Recalcula total de horas, crédito e débito toda vez que as horas são editadas
-    val totalHours by remember(entryTime, exitTime) {
-        mutableStateOf(
-            if (parseAndFormatTime(entryTime) != "Invalid" && parseAndFormatTime(exitTime) != "Invalid") {
-                calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
-            } else {
-                "Invalid"
-            }
-        )
-    }
-    val credit by remember(totalHours) {
-        mutableStateOf(
-            if (totalHours != "Invalid") calculateCredit(totalHours, workDay.dayOfWeek) else "00:00"
-        )
-    }
-    val debit by remember(totalHours) {
-        mutableStateOf(
-            if (totalHours != "Invalid") calculateDebit(totalHours, workDay.dayOfWeek) else "00:00"
-        )
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { showDialog = true }, // Ao clicar, o diálogo de edição é exibido
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // Coluna de Data e Dia da Semana
@@ -744,39 +752,17 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean): Pair<Double, Double> {
         }
 
         // Coluna de Entrada
-        if (isEditing) {
-            OutlinedTextField(
-                value = entryTime,
-                onValueChange = { newTime ->
-                    entryTime = newTime
-                },
-                label = { Text("Entrada") },
-                singleLine = true,
-                isError = parseAndFormatTime(entryTime) == "Invalid",
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        }
+        Text(text = entryTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
 
         // Coluna de Saída
-        if (isEditing) {
-            OutlinedTextField(
-                value = exitTime,
-                onValueChange = { newTime ->
-                    exitTime = newTime
-                },
-                label = { Text("Saída") },
-                singleLine = true,
-                isError = parseAndFormatTime(exitTime) == "Invalid",
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        }
+        Text(text = exitTime, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
 
         // Coluna de Total de Horas e Crédito/Débito
         Column(modifier = Modifier.weight(1f)) {
+            val totalHours = calculateTotalAdjustedHours(entryTime, exitTime, workDay.dayOfWeek)
+            val credit = calculateCredit(totalHours, workDay.dayOfWeek)
+            val debit = calculateDebit(totalHours, workDay.dayOfWeek)
+
             if (totalHours == "Invalid") {
                 Text(text = "Erro", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             } else {
@@ -790,10 +776,81 @@ fun WorkDayItem(workDay: WorkDay, isEditing: Boolean): Pair<Double, Double> {
         }
     }
 
-    // Retornar os valores de crédito e débito para atualização do saldo total
-    val creditDouble = parseTimeToDouble(credit)
-    val debitDouble = parseTimeToDouble(debit)
-    return Pair(creditDouble, debitDouble)
+    // Exibir o diálogo de edição quando o estado showDialog for verdadeiro
+    if (showDialog) {
+        EditTimeDialog(
+            entryTime = entryTime,
+            exitTime = exitTime,
+            onDismiss = { showDialog = false }, // Fecha o diálogo sem salvar
+            onSave = { newEntryTime, newExitTime ->
+                // Ao salvar, os horários são atualizados e a soma só ocorre neste momento
+                entryTime = newEntryTime
+                exitTime = newExitTime
+                onSave(newEntryTime, newExitTime) // Atualiza os horários e recalcula os valores
+                showDialog = false
+            }
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun EditTimeDialog(
+    entryTime: String,
+    exitTime: String,
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var newEntryTime by remember { mutableStateOf(entryTime) }
+    var newExitTime by remember { mutableStateOf(exitTime) }
+
+    // Função para validar os horários
+    fun isValidTime(time: String): Boolean {
+        return try {
+            LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Editar Horários") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = newEntryTime,
+                    onValueChange = { newEntryTime = it },
+                    label = { Text("Horário de Entrada") },
+                    isError = !isValidTime(newEntryTime)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newExitTime,
+                    onValueChange = { newExitTime = it },
+                    label = { Text("Horário de Saída") },
+                    isError = !isValidTime(newExitTime)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (isValidTime(newEntryTime) && isValidTime(newExitTime)) {
+                        onSave(newEntryTime, newExitTime) // Salva os horários e recalcula o saldo
+                    }
+                }
+            ) {
+                Text("Salvar")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 // Função para converter o valor de crédito/débito para Double
@@ -891,67 +948,6 @@ fun calculateTotalNegativeHours(username: String, selectedMonth: Month?): Double
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun EditTimeDialog(
-    workDay: WorkDay,
-    entryTime: String,
-    exitTime: String,
-    onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
-) {
-    var newEntryTime by remember { mutableStateOf(entryTime) }
-    var newExitTime by remember { mutableStateOf(exitTime) }
-
-    // Função para validar os horários
-    fun isValidTime(time: String): Boolean {
-        return try {
-            LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "Editar Horários") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = newEntryTime,
-                    onValueChange = { newEntryTime = it },
-                    label = { Text("Horário de Entrada") },
-                    isError = !isValidTime(newEntryTime)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = newExitTime,
-                    onValueChange = { newExitTime = it },
-                    label = { Text("Horário de Saída") },
-                    isError = !isValidTime(newExitTime)
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (isValidTime(newEntryTime) && isValidTime(newExitTime)) {
-                        onSave(newEntryTime, newExitTime)
-                    }
-                }
-            ) {
-                Text("Salvar")
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        }
-    )
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
 data class WorkDay(
     val date: String,
     var entryTime: String,
@@ -966,20 +962,6 @@ data class WorkDay(
     val credit: String = calculateCredit(totalAdjustedHours, dayOfWeek)
     @RequiresApi(Build.VERSION_CODES.O)
     val debit: String = calculateDebit(totalAdjustedHours, dayOfWeek)
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun calculateAdjustedTotal(credit: String, debit: String): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-
-    val creditTime = if (credit != "00:00") LocalTime.parse(credit, formatter) else LocalTime.of(0, 0)
-    val debitTime = if (debit != "00:00") LocalTime.parse(debit, formatter) else LocalTime.of(0, 0)
-
-    // Subtrair débito do crédito para obter o saldo
-    val adjustedMinutes = creditTime.toSecondOfDay() - debitTime.toSecondOfDay()
-    val adjustedTime = LocalTime.ofSecondOfDay(adjustedMinutes.toLong())
-
-    return adjustedTime.format(formatter)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -1007,8 +989,12 @@ fun calculateCredit(totalHours: String, dayOfWeek: String): String {
     val standardHours = if (dayOfWeek.equals("sexta-feira", ignoreCase = true)) LocalTime.of(8, 0) else LocalTime.of(9, 0)
     return if (total.isAfter(standardHours)) {
         val extraMinutes = ChronoUnit.MINUTES.between(standardHours, total)
-        val hours = extraMinutes / 60
-        val minutes = extraMinutes % 60
+
+        // Aplicar o fator de 1,5
+        val adjustedMinutes = (extraMinutes * 1.5).toLong()
+
+        val hours = adjustedMinutes / 60
+        val minutes = adjustedMinutes % 60
         "%02d:%02d".format(hours, minutes)
     } else {
         "00:00"
