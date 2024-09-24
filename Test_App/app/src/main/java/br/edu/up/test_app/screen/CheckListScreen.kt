@@ -19,10 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Tela3Screen(navController: NavHostController) {
+fun CheckListScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(

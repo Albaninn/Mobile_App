@@ -22,7 +22,7 @@ import androidx.navigation.NavHostController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Tela1Screen(navController: NavHostController) {
+fun AdmScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(

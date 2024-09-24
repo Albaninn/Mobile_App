@@ -1,4 +1,4 @@
-package br.edu.up.test_app.screen
+package br.edu.up.test_app.screen.inicio_perfil
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
