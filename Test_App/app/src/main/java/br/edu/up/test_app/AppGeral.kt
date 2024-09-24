@@ -25,9 +25,9 @@ import br.edu.up.test_app.ex.Ex3
 import br.edu.up.test_app.ex.Ex4
 import br.edu.up.test_app.ex.ExScreen
 import br.edu.up.test_app.screen.AdmScreen
-import br.edu.up.test_app.screen.BancoHorasScreen
+import br.edu.up.test_app.screen.usoGeral.BancoHorasScreen
 import br.edu.up.test_app.screen.BaseScreen
-import br.edu.up.test_app.screen.CheckListScreen
+import br.edu.up.test_app.screen.usoGeral.CheckListScreen
 import br.edu.up.test_app.screen.inicio_perfil.LoginScreen
 import br.edu.up.test_app.screen.inicio_perfil.ProfileScreen
 import br.edu.up.test_app.screen.inicio_perfil.RegistrationScreen

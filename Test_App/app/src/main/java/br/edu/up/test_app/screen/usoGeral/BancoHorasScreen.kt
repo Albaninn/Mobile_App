@@ -1,4 +1,4 @@
-package br.edu.up.test_app.screen
+package br.edu.up.test_app.screen.usoGeral
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -268,7 +268,7 @@ fun WorkHoursList(
 
         // Iterar sobre os dias de trabalho e exibir
         workDays.forEach { workDay ->
-            br.edu.up.test_app.screen.WorkDayItem(
+            WorkDayItem(
                 workDay = workDay,
                 onSave = { newEntryTime, newExitTime ->
                     // Atualizar as horas no mapa de workHours

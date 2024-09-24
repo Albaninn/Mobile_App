@@ -1,4 +1,4 @@
-package br.edu.up.test_app.screen
+package br.edu.up.test_app.screen.usoGeral
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
