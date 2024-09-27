@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
 
     // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item
     val approvalStates = remember { mutableStateListOf(*Array(sections.flatMap { it.questions }.size) { -1 }) }
+
+    // Verificar se todas as perguntas foram respondidas
+    val allAnswered = approvalStates.all { it != -1 }
 
     Scaffold(
         topBar = {
@@ -104,6 +108,21 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                     }
                 }
             }
+
+            item {
+                // Botão para concluir checklist
+                Button(
+                    onClick = {
+                        // Lógica para enviar ou salvar o checklist
+                    },
+                    enabled = allAnswered,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text("Concluir Checklist")
+                }
+            }
         }
     }
 }
@@ -116,15 +135,20 @@ fun ChecklistItemWithApproval(
 ) {
     Column {
         // Pergunta
-        Text(text = question)
+        Text(
+            text = question,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
 
+        // Espaço entre pergunta e opções
         Spacer(modifier = Modifier.padding(4.dp))
 
         // Row para Aprovado e Reprovado
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -132,7 +156,7 @@ fun ChecklistItemWithApproval(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Aprovado")
+                Text(text = "Aprovado", style = MaterialTheme.typography.bodyMedium)
                 RadioButton(
                     selected = selectedOption == 0,
                     onClick = { onOptionSelected(0) },
@@ -146,7 +170,7 @@ fun ChecklistItemWithApproval(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Reprovado")
+                Text(text = "Reprovado", style = MaterialTheme.typography.bodyMedium)
                 RadioButton(
                     selected = selectedOption == 1,
                     onClick = { onOptionSelected(1) },
