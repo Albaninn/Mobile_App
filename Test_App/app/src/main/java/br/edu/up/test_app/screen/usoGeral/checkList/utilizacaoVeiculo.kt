@@ -1,35 +1,19 @@
 package br.edu.up.test_app.screen.usoGeral.checkList
 
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -123,6 +107,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             // Outras seções que podem ser expandidas/recolhidas
             expandableSections.forEachIndexed { sectionIndex, section ->
                 item {
+                    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                    var hasReprovado by remember { mutableStateOf(false) } // Estado para verificar se há algum "Reprovado"
+
                     // Cabeçalho da seção com funcionalidade de expandir/encolher
                     Row(
                         modifier = Modifier
@@ -152,21 +139,32 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                             val globalIndexOffset = sectionsTakeTotalQuestions(sectionIndex, expandableSections)
                             section.questions.forEachIndexed { questionIndex, question ->
                                 val globalIndex = globalIndexOffset + questionIndex
-                                if (section.title == "Seção 6: Observações") {
-                                    OutlinedTextField(
-                                        value = observationsText,
-                                        onValueChange = { observationsText = it },
-                                        label = { Text("Observações") },
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                } else {
-                                    ChecklistItemWithApproval(
-                                        question = question,
-                                        selectedOption = approvalStates[globalIndex],
-                                        onOptionSelected = { selectedOption ->
-                                            approvalStates[globalIndex] = selectedOption
-                                        }
-                                    )
+
+                                ChecklistItemWithApproval(
+                                    question = question,
+                                    selectedOption = approvalStates[globalIndex],
+                                    onOptionSelected = { selectedOption ->
+                                        approvalStates[globalIndex] = selectedOption
+                                        // Verifica se alguma opção foi marcada como "Reprovado"
+                                        if (selectedOption == 1) hasReprovado = true else hasReprovado = false
+                                    }
+                                )
+                            }
+
+                            // Mostrar opção de upload de imagem se algum item for marcado como "Reprovado"
+                            if (hasReprovado) {
+                                // A inicialização do launcher deve estar aqui, dentro do escopo composable
+                                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+                                    imageBitmap = bitmap
+                                }
+
+                                Button(onClick = { launcher.launch(null) }) {
+                                    Text("Incluir Imagem do Item Reprovado")
+                                }
+
+                                // Mostrar pré-visualização da imagem, se disponível
+                                imageBitmap?.let {
+                                    Image(bitmap = it.asImageBitmap(), contentDescription = "Imagem do item reprovado", modifier = Modifier.size(100.dp))
                                 }
                             }
                         }
@@ -214,35 +212,26 @@ fun ChecklistItemWithApproval(
             text = question,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier
-                .weight(1f)  // O texto da pergunta ocupa o máximo de espaço disponível
-                .padding(end = 8.dp)  // Adiciona um espaçamento entre o texto e as opções
+                .weight(1f)
+                .padding(end = 8.dp)
         )
 
-        // Opção de Aprovado e Reprovado, alinhadas à direita
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Opção de Aprovado e Reprovado
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Aprovado", style = MaterialTheme.typography.bodyMedium)
             RadioButton(
                 selected = selectedOption == 0,
                 onClick = { onOptionSelected(0) },
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MaterialTheme.colorScheme.primary
-                )
+                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
             )
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 16.dp)
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 16.dp)) {
             Text(text = "Reprovado", style = MaterialTheme.typography.bodyMedium)
             RadioButton(
                 selected = selectedOption == 1,
                 onClick = { onOptionSelected(1) },
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MaterialTheme.colorScheme.primary
-                )
+                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
             )
         }
     }
