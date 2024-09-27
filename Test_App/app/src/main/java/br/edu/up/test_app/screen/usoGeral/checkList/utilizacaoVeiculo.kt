@@ -52,6 +52,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
     var modelText by remember { mutableStateOf("") }
     var observationsText by remember { mutableStateOf("") }
 
+    // Lista de imagens associadas às reprovações
+    val reprovadoImages = remember { mutableStateListOf<Bitmap?>(null, null, null, null, null) }
+
     // Verificar se todas as perguntas foram respondidas
     val allAnswered = approvalStates.all { it != -1 }
 
@@ -107,7 +110,6 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             // Outras seções que podem ser expandidas/recolhidas
             expandableSections.forEachIndexed { sectionIndex, section ->
                 item {
-                    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
                     var hasReprovado by remember { mutableStateOf(false) } // Estado para verificar se há algum "Reprovado"
 
                     // Cabeçalho da seção com funcionalidade de expandir/encolher
@@ -146,25 +148,35 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                                     onOptionSelected = { selectedOption ->
                                         approvalStates[globalIndex] = selectedOption
                                         // Verifica se alguma opção foi marcada como "Reprovado"
-                                        if (selectedOption == 1) hasReprovado = true else hasReprovado = false
+                                        if (selectedOption == 1) {
+                                            hasReprovado = true
+                                            reprovadoImages.add(null) // Preparar para associar uma imagem
+                                        } else {
+                                            hasReprovado = false
+                                        }
                                     }
                                 )
                             }
 
-                            // Mostrar opção de upload de imagem se algum item for marcado como "Reprovado"
-                            if (hasReprovado) {
-                                // A inicialização do launcher deve estar aqui, dentro do escopo composable
-                                val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-                                    imageBitmap = bitmap
-                                }
+                            // Mostrar opção de upload de imagem para cada item reprovado
+                            section.questions.forEachIndexed { questionIndex, question ->
+                                val globalIndex = globalIndexOffset + questionIndex
+                                if (approvalStates[globalIndex] == 1) { // Se o item foi reprovado
+                                    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+                                        if (bitmap != null) {
+                                            // Associar a imagem à reprovação correspondente
+                                            reprovadoImages[globalIndex] = bitmap
+                                        }
+                                    }
 
-                                Button(onClick = { launcher.launch(null) }) {
-                                    Text("Incluir Imagem do Item Reprovado")
-                                }
+                                    Button(onClick = { launcher.launch(null) }) {
+                                        Text("Incluir Imagem do Item Reprovado")
+                                    }
 
-                                // Mostrar pré-visualização da imagem, se disponível
-                                imageBitmap?.let {
-                                    Image(bitmap = it.asImageBitmap(), contentDescription = "Imagem do item reprovado", modifier = Modifier.size(100.dp))
+                                    // Mostrar pré-visualização da imagem, se disponível
+                                    reprovadoImages[globalIndex]?.let {
+                                        Image(bitmap = it.asImageBitmap(), contentDescription = "Imagem do item reprovado", modifier = Modifier.size(100.dp))
+                                    }
                                 }
                             }
                         }
