@@ -40,22 +40,24 @@ data class ChecklistSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UtilizacaoVeiculosScreen(navController: NavHostController) {
-    // Definir as 7 seções do checklist
-    val sections = listOf(
-        ChecklistSection("Seção Veículo: ", listOf("Placa: ", "Modelo do veículo: ")),
+    // Definir as 6 seções que podem ser expandidas/recolhidas
+    val expandableSections = listOf(
         ChecklistSection("Seção 1: Verificação de Luzes", listOf("Farol Dianteiro", "Setas Dianteiras", "Farol Traseiro", "Setas Traseiras", "Luz de Freio")),
-        ChecklistSection("Seção 2: Verificação dos Mecânica", listOf("Nível de Óleo do motor", "Nível de Água", "Nível de água da Bateria", "Pneus Dianteiros", "Pneus Traseiros", "Estepe", "Macaco", "Chave de Roda", "Triângulo de sinalização")),
+        ChecklistSection("Seção 2: Verificação da Mecânica", listOf("Nível de Óleo do motor", "Nível de Água", "Nível de água da Bateria", "Pneus Dianteiros", "Pneus Traseiros", "Estepe", "Macaco", "Chave de Roda", "Triângulo de sinalização")),
         ChecklistSection("Seção 3: Verificação de Lataria", listOf("Frontal", "Lateral Direita", "Traseira", "Lateral Esquerda", "Teto")),
         ChecklistSection("Seção 4: Verificação de Vidros", listOf("Para-brisa", "Janelas Lateral Direita", "Vigia", "Janela Lateral Esquerda")),
         ChecklistSection("Seção 5: Verificação de Documentos", listOf("Documento CRLV", "Manual do Proprietário")),
         ChecklistSection("Seção 6: Observações", listOf("Observações"))
     )
 
+    // "Seção Veículo" que deve sempre ficar visível
+    val vehicleSection = ChecklistSection("Seção Veículo: ", listOf("Placa: ", "Modelo do veículo: "))
+
     // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item
-    val approvalStates = remember { mutableStateListOf(*Array(sections.flatMap { it.questions }.size) { -1 }) }
+    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.flatMap { it.questions }.size + vehicleSection.questions.size) { -1 }) }
 
     // Usar estado para armazenar se a seção está expandida ou não
-    val expandedStates = remember { mutableStateListOf(*Array(sections.size) { false }) }
+    val expandedStates = remember { mutableStateListOf(*Array(expandableSections.size) { false }) }
 
     // Verificar se todas as perguntas foram respondidas
     val allAnswered = approvalStates.all { it != -1 }
@@ -84,8 +86,30 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Iterar pelas seções do checklist
-            sections.forEachIndexed { sectionIndex, section ->
+            // Seção "Veículo" sempre visível
+            item {
+                Text(
+                    text = vehicleSection.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    vehicleSection.questions.forEachIndexed { index, question ->
+                        ChecklistItemWithApproval(
+                            question = question,
+                            selectedOption = approvalStates[index],
+                            onOptionSelected = { selectedOption ->
+                                approvalStates[index] = selectedOption
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Outras seções que podem ser expandidas/recolhidas
+            expandableSections.forEachIndexed { sectionIndex, section ->
                 item {
                     // Cabeçalho da seção com funcionalidade de expandir/encolher
                     Row(
@@ -113,9 +137,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Iterar pelas perguntas da seção
+                            val globalIndexOffset = vehicleSection.questions.size + sectionsTakeTotalQuestions(sectionIndex, expandableSections)
                             section.questions.forEachIndexed { questionIndex, question ->
-                                val globalIndex = sections.take(sectionIndex).sumOf { it.questions.size } + questionIndex
+                                val globalIndex = globalIndexOffset + questionIndex
                                 ChecklistItemWithApproval(
                                     question = question,
                                     selectedOption = approvalStates[globalIndex],
@@ -145,6 +169,10 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             }
         }
     }
+}
+
+fun sectionsTakeTotalQuestions(take: Int, sections: List<ChecklistSection>): Int {
+    return sections.take(take).sumOf { it.questions.size }
 }
 
 @Composable
