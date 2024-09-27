@@ -1,10 +1,10 @@
 package br.edu.up.test_app.screen.usoGeral.checkList
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,13 +24,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import br.edu.up.test_app.R
 
 // Modelo básico de uma seção de checklist
 data class ChecklistSection(
@@ -54,6 +53,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
 
     // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item
     val approvalStates = remember { mutableStateListOf(*Array(sections.flatMap { it.questions }.size) { -1 }) }
+
+    // Usar estado para armazenar se a seção está expandida ou não
+    val expandedStates = remember { mutableStateListOf(*Array(sections.size) { false }) }
 
     // Verificar se todas as perguntas foram respondidas
     val allAnswered = approvalStates.all { it != -1 }
@@ -85,25 +87,43 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             // Iterar pelas seções do checklist
             sections.forEachIndexed { sectionIndex, section ->
                 item {
-                    // Título da seção
-                    Text(
-                        text = section.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    // Cabeçalho da seção com funcionalidade de expandir/encolher
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                expandedStates[sectionIndex] = !expandedStates[sectionIndex]
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Iterar pelas perguntas da seção
-                        section.questions.forEachIndexed { questionIndex, question ->
-                            val globalIndex = sections.take(sectionIndex).sumOf { it.questions.size } + questionIndex
-                            ChecklistItemWithApproval(
-                                question = question,
-                                selectedOption = approvalStates[globalIndex],
-                                onOptionSelected = { selectedOption ->
-                                    approvalStates[globalIndex] = selectedOption
-                                }
-                            )
+                        Text(
+                            text = section.title,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Icon(
+                            painter = painterResource(id = if (expandedStates[sectionIndex]) R.drawable.arrowup else R.drawable.arrowdown),
+                            contentDescription = if (expandedStates[sectionIndex]) "Recolher" else "Expandir"
+                        )
+                    }
+
+                    // Verificar se a seção está expandida
+                    if (expandedStates[sectionIndex]) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Iterar pelas perguntas da seção
+                            section.questions.forEachIndexed { questionIndex, question ->
+                                val globalIndex = sections.take(sectionIndex).sumOf { it.questions.size } + questionIndex
+                                ChecklistItemWithApproval(
+                                    question = question,
+                                    selectedOption = approvalStates[globalIndex],
+                                    onOptionSelected = { selectedOption ->
+                                        approvalStates[globalIndex] = selectedOption
+                                    }
+                                )
+                            }
                         }
                     }
                 }
