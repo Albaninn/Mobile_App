@@ -133,52 +133,48 @@ fun ChecklistItemWithApproval(
     selectedOption: Int,
     onOptionSelected: (Int) -> Unit
 ) {
-    Column {
-        // Pergunta
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Texto da pergunta ocupando uma parte da linha
         Text(
             text = question,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(vertical = 4.dp)
+            modifier = Modifier
+                .weight(1f)  // O texto da pergunta ocupa o máximo de espaço disponível
+                .padding(end = 8.dp)  // Adiciona um espaçamento entre o texto e as opções
         )
 
-        // Espaço entre pergunta e opções
-        Spacer(modifier = Modifier.padding(4.dp))
-
-        // Row para Aprovado e Reprovado
+        // Opção de Aprovado e Reprovado, alinhadas à direita
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Opção de Aprovado
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Aprovado", style = MaterialTheme.typography.bodyMedium)
-                RadioButton(
-                    selected = selectedOption == 0,
-                    onClick = { onOptionSelected(0) },
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary
-                    )
+            Text(text = "Aprovado", style = MaterialTheme.typography.bodyMedium)
+            RadioButton(
+                selected = selectedOption == 0,
+                onClick = { onOptionSelected(0) },
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = MaterialTheme.colorScheme.primary
                 )
-            }
+            )
+        }
 
-            // Opção de Reprovado
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Reprovado", style = MaterialTheme.typography.bodyMedium)
-                RadioButton(
-                    selected = selectedOption == 1,
-                    onClick = { onOptionSelected(1) },
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary
-                    )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 16.dp)
+        ) {
+            Text(text = "Reprovado", style = MaterialTheme.typography.bodyMedium)
+            RadioButton(
+                selected = selectedOption == 1,
+                onClick = { onOptionSelected(1) },
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = MaterialTheme.colorScheme.primary
                 )
-            }
+            )
         }
     }
 }
