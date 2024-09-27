@@ -16,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -24,6 +25,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -51,13 +55,18 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
     )
 
     // "Seção Veículo" que deve sempre ficar visível
-    val vehicleSection = ChecklistSection("Seção Veículo: ", listOf("Placa: ", "Modelo do veículo: "))
+    val vehicleSection = ChecklistSection("Seção Veículo: ", listOf("Placa", "Modelo do veículo"))
 
     // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item
-    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.flatMap { it.questions }.size + vehicleSection.questions.size) { -1 }) }
+    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.flatMap { it.questions }.size) { -1 }) }
 
     // Usar estado para armazenar se a seção está expandida ou não
     val expandedStates = remember { mutableStateListOf(*Array(expandableSections.size) { false }) }
+
+    // Estados para armazenar o valor da placa, modelo e observações
+    var plateText by remember { mutableStateOf("") }
+    var modelText by remember { mutableStateOf("") }
+    var observationsText by remember { mutableStateOf("") }
 
     // Verificar se todas as perguntas foram respondidas
     val allAnswered = approvalStates.all { it != -1 }
@@ -86,7 +95,7 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Seção "Veículo" sempre visível
+            // Seção "Veículo" sempre visível com campos de texto para Placa e Modelo
             item {
                 Text(
                     text = vehicleSection.title,
@@ -96,15 +105,18 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    vehicleSection.questions.forEachIndexed { index, question ->
-                        ChecklistItemWithApproval(
-                            question = question,
-                            selectedOption = approvalStates[index],
-                            onOptionSelected = { selectedOption ->
-                                approvalStates[index] = selectedOption
-                            }
-                        )
-                    }
+                    OutlinedTextField(
+                        value = plateText,
+                        onValueChange = { plateText = it },
+                        label = { Text("Placa") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = modelText,
+                        onValueChange = { modelText = it },
+                        label = { Text("Modelo do Veículo") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
@@ -137,16 +149,25 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val globalIndexOffset = vehicleSection.questions.size + sectionsTakeTotalQuestions(sectionIndex, expandableSections)
+                            val globalIndexOffset = sectionsTakeTotalQuestions(sectionIndex, expandableSections)
                             section.questions.forEachIndexed { questionIndex, question ->
                                 val globalIndex = globalIndexOffset + questionIndex
-                                ChecklistItemWithApproval(
-                                    question = question,
-                                    selectedOption = approvalStates[globalIndex],
-                                    onOptionSelected = { selectedOption ->
-                                        approvalStates[globalIndex] = selectedOption
-                                    }
-                                )
+                                if (section.title == "Seção 6: Observações") {
+                                    OutlinedTextField(
+                                        value = observationsText,
+                                        onValueChange = { observationsText = it },
+                                        label = { Text("Observações") },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                } else {
+                                    ChecklistItemWithApproval(
+                                        question = question,
+                                        selectedOption = approvalStates[globalIndex],
+                                        onOptionSelected = { selectedOption ->
+                                            approvalStates[globalIndex] = selectedOption
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
