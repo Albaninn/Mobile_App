@@ -58,6 +58,17 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
     // Verificar se todas as perguntas foram respondidas
     val allAnswered = approvalStates.all { it != -1 }
 
+    // Launcher para tirar foto
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            // Associar a imagem à reprovação correspondente
+            val index = reprovadoImages.indexOfFirst { it == null }
+            if (index != -1) {
+                reprovadoImages[index] = bitmap
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -154,30 +165,12 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                                         } else {
                                             hasReprovado = false
                                         }
+                                    },
+                                    imageBitmap = reprovadoImages.getOrNull(globalIndex),
+                                    onTakePictureClicked = {
+                                        launcher.launch(null)
                                     }
                                 )
-                            }
-
-                            // Mostrar opção de upload de imagem para cada item reprovado
-                            section.questions.forEachIndexed { questionIndex, question ->
-                                val globalIndex = globalIndexOffset + questionIndex
-                                if (approvalStates[globalIndex] == 1) { // Se o item foi reprovado
-                                    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-                                        if (bitmap != null) {
-                                            // Associar a imagem à reprovação correspondente
-                                            reprovadoImages[globalIndex] = bitmap
-                                        }
-                                    }
-
-                                    Button(onClick = { launcher.launch(null) }) {
-                                        Text("Incluir Imagem do Item Reprovado")
-                                    }
-
-                                    // Mostrar pré-visualização da imagem, se disponível
-                                    reprovadoImages[globalIndex]?.let {
-                                        Image(bitmap = it.asImageBitmap(), contentDescription = "Imagem do item reprovado", modifier = Modifier.size(100.dp))
-                                    }
-                                }
                             }
                         }
                     }
@@ -210,7 +203,9 @@ fun sectionsTakeTotalQuestions(take: Int, sections: List<ChecklistSection>): Int
 fun ChecklistItemWithApproval(
     question: String,
     selectedOption: Int,
-    onOptionSelected: (Int) -> Unit
+    onOptionSelected: (Int) -> Unit,
+    imageBitmap: Bitmap?,
+    onTakePictureClicked: () -> Unit // Altere para um lambda normal e não @Composable
 ) {
     Row(
         modifier = Modifier
@@ -244,6 +239,23 @@ fun ChecklistItemWithApproval(
                 selected = selectedOption == 1,
                 onClick = { onOptionSelected(1) },
                 colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+            )
+        }
+    }
+
+    // Se o item for reprovado, exibir o botão para incluir imagem
+    if (selectedOption == 1) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = onTakePictureClicked) {
+            Text("Incluir Imagem para $question Reprovado")  // Exibe o nome do item reprovado
+        }
+
+        // Mostrar pré-visualização da imagem, se disponível
+        imageBitmap?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = "Imagem de $question reprovado",
+                modifier = Modifier.size(100.dp).padding(top = 8.dp)
             )
         }
     }
