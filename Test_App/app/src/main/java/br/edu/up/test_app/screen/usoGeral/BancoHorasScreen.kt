@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
@@ -36,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,7 +100,6 @@ val workHours = mutableMapOf(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BancoHorasScreen(navController: NavHostController, username: String) {
-    var isEditing by remember { mutableStateOf(false) }
     var showInReais by remember { mutableStateOf(false) }
     var selectedMonth by remember { mutableStateOf<Month?>(null) }
 
@@ -109,6 +110,16 @@ fun BancoHorasScreen(navController: NavHostController, username: String) {
 
     // Calcular a diferença entre horas positivas e negativas
     val saldoHoras = totalPositiveHours.value - totalNegativeHours.value
+
+    // Função para recalcular o saldo
+    fun recalculateSaldo() {
+        totalPositiveHours.value = calculateTotalPositiveHours(username, selectedMonth)
+        totalNegativeHours.value = calculateTotalNegativeHours(username, selectedMonth)
+    }
+
+    LaunchedEffect(selectedMonth) {
+        recalculateSaldo()
+    }
 
     Scaffold(
         topBar = {
@@ -126,16 +137,11 @@ fun BancoHorasScreen(navController: NavHostController, username: String) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        isEditing = !isEditing
-                        if (!isEditing) {
-                            // Recalcular os totais quando a edição é concluída
-                            totalPositiveHours.value = calculateTotalPositiveHours(username, selectedMonth)
-                            totalNegativeHours.value = calculateTotalNegativeHours(username, selectedMonth)
-                        }
+                        recalculateSaldo()  // Recalcular o saldo ao clicar
                     }) {
                         Icon(
-                            imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
-                            contentDescription = if (isEditing) "Salvar" else "Editar"
+                            imageVector = Icons.Default.Refresh,  // Ícone de refresh/atualizar
+                            contentDescription = "Atualizar Cálculo"
                         )
                     }
                 }
@@ -190,13 +196,7 @@ fun BancoHorasScreen(navController: NavHostController, username: String) {
             // Filtro por tempo
             FilterByTime(selectedMonth) { month ->
                 selectedMonth = month
-                // Resetar o saldo quando o mês for alterado
-                totalPositiveHours.value = 0.0
-                totalNegativeHours.value = 0.0
-
-                // Atualizar o saldo quando o mês for alterado
-                totalPositiveHours.value = calculateTotalPositiveHours(username, selectedMonth)
-                totalNegativeHours.value = calculateTotalNegativeHours(username, selectedMonth)
+                recalculateSaldo() // Recalcular o saldo ao mudar o mês
             }
 
             Spacer(modifier = Modifier.height(8.dp))

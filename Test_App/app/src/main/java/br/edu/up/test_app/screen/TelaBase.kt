@@ -58,7 +58,7 @@ fun BaseScreen(navController: NavHostController, username: String, isDarkTheme: 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
-    val items = mutableListOf("Consulta de Hora", "Tela 3", "Exercicios")
+    val items = mutableListOf("Consulta de Hora", "Check-List", "Exercicios")
 
     if (userProfile.accessLevel == "adm") {
         items.add(0, "Tela administrativa")
@@ -78,7 +78,7 @@ fun BaseScreen(navController: NavHostController, username: String, isDarkTheme: 
                             when (item) {
                                 "Tela administrativa" -> navController.navigate("tela_1")
                                 "Consulta de Hora" -> navController.navigate("tela_2/$username")
-                                "Tela 3" -> navController.navigate("tela_3")
+                                "Check-List" -> navController.navigate("tela_3")
                                 "Exercicios" -> navController.navigate("tela_4")
                             }
                             coroutineScope.launch { drawerState.close() }

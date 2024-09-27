@@ -31,6 +31,7 @@ import br.edu.up.test_app.screen.usoGeral.CheckListScreen
 import br.edu.up.test_app.screen.inicio_perfil.LoginScreen
 import br.edu.up.test_app.screen.inicio_perfil.ProfileScreen
 import br.edu.up.test_app.screen.inicio_perfil.RegistrationScreen
+import br.edu.up.test_app.screen.usoGeral.checkList.UtilizacaoVeiculosScreen
 import br.edu.up.test_app.ui.theme.Test_AppTheme
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -61,6 +62,7 @@ fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, 
             BancoHorasScreen(navController, username)
         }
         composable("tela_3") { CheckListScreen(navController) }
+        composable("utilizacao_de_veiculos") { UtilizacaoVeiculosScreen(navController) }
         composable("tela_4") { ExScreen(navController) }
         composable("ex_1") { Ex1(navController) }
         composable("ex_2") { Ex2(navController) }
