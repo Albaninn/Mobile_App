@@ -150,27 +150,38 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             val globalIndexOffset = sectionsTakeTotalQuestions(sectionIndex, expandableSections)
-                            section.questions.forEachIndexed { questionIndex, question ->
-                                val globalIndex = globalIndexOffset + questionIndex
 
-                                ChecklistItemWithApproval(
-                                    question = question,
-                                    selectedOption = approvalStates[globalIndex],
-                                    onOptionSelected = { selectedOption ->
-                                        approvalStates[globalIndex] = selectedOption
-                                        // Verifica se alguma opção foi marcada como "Reprovado"
-                                        if (selectedOption == 1) {
-                                            hasReprovado = true
-                                            reprovadoImages.add(null) // Preparar para associar uma imagem
-                                        } else {
-                                            hasReprovado = false
-                                        }
-                                    },
-                                    imageBitmap = reprovadoImages.getOrNull(globalIndex),
-                                    onTakePictureClicked = {
-                                        launcher.launch(null)
-                                    }
+                            // Verificação se é a seção de observações
+                            if (section.title == "Seção 6: Observações") {
+                                OutlinedTextField(
+                                    value = observationsText,
+                                    onValueChange = { observationsText = it },
+                                    label = { Text("Observações") },
+                                    modifier = Modifier.fillMaxWidth()
                                 )
+                            } else {
+                                section.questions.forEachIndexed { questionIndex, question ->
+                                    val globalIndex = globalIndexOffset + questionIndex
+
+                                    ChecklistItemWithApproval(
+                                        question = question,
+                                        selectedOption = approvalStates[globalIndex],
+                                        onOptionSelected = { selectedOption ->
+                                            approvalStates[globalIndex] = selectedOption
+                                            // Verifica se alguma opção foi marcada como "Reprovado"
+                                            if (selectedOption == 1) {
+                                                hasReprovado = true
+                                                reprovadoImages.add(null) // Preparar para associar uma imagem
+                                            } else {
+                                                hasReprovado = false
+                                            }
+                                        },
+                                        imageBitmap = reprovadoImages.getOrNull(globalIndex),
+                                        onTakePictureClicked = {
+                                            launcher.launch(null)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
