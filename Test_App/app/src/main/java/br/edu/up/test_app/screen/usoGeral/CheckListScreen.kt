@@ -61,11 +61,11 @@ fun CheckListScreen(navController: NavHostController) {
                 Button(
                     onClick = {
                         // Navega para a tela de Utilização de Veículos
-                        navController.navigate("utilizacao_de_veiculos")
+                        navController.navigate("pre_utilizacao_de_veiculos")
                     },
                     modifier = Modifier.fillMaxWidth(0.8f) // Definindo o tamanho fixo para o botão (80% da largura)
                 ) {
-                    Text("Utilização de Veículos")
+                    Text("Vistoria do Veículo")
                 }
 
                 // Outro botão para checklist futuro

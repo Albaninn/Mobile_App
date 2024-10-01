@@ -27,7 +27,7 @@ data class ChecklistSection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UtilizacaoVeiculosScreen(navController: NavHostController) {
+fun VistoriaVeiculosScreen(navController: NavHostController, placa: String, modelo: String) {
     // Definir as 5 seções obrigatórias que podem ser expandidas/recolhidas
     val expandableSections = listOf(
         ChecklistSection("Seção 1: Verificação de Luzes", listOf("Farol Dianteiro", "Setas Dianteiras", "Farol Traseiro", "Setas Traseiras", "Luz de Freio")),
@@ -81,6 +81,11 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Mostrar as informações de Placa e Modelo
+            item {
+                Text("Placa do Veículo: $placa", style = MaterialTheme.typography.headlineLarge)
+                Text("Modelo do Veículo: $modelo", style = MaterialTheme.typography.titleMedium)
+            }
             // Outras seções obrigatórias (seções 1 a 5)
             expandableSections.forEachIndexed { sectionIndex, section ->
                 item {

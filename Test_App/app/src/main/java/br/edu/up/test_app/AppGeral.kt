@@ -1,5 +1,6 @@
 package br.edu.up.test_app
 
+import VerificacaoVeiculosScreen
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -31,7 +32,7 @@ import br.edu.up.test_app.screen.usoGeral.CheckListScreen
 import br.edu.up.test_app.screen.inicio_perfil.LoginScreen
 import br.edu.up.test_app.screen.inicio_perfil.ProfileScreen
 import br.edu.up.test_app.screen.inicio_perfil.RegistrationScreen
-import br.edu.up.test_app.screen.usoGeral.checkList.UtilizacaoVeiculosScreen
+import br.edu.up.test_app.screen.usoGeral.checkList.VistoriaVeiculosScreen
 import br.edu.up.test_app.ui.theme.Test_AppTheme
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -62,7 +63,22 @@ fun NavigationComponent(navController: NavHostController, isDarkTheme: Boolean, 
             BancoHorasScreen(navController, username)
         }
         composable("tela_3") { CheckListScreen(navController) }
-        composable("utilizacao_de_veiculos") { UtilizacaoVeiculosScreen(navController) }
+        // Nova tela PreUtilizacaoVeiculosScreen, para inserir Placa e Modelo
+        composable("pre_utilizacao_de_veiculos") {
+            VerificacaoVeiculosScreen(navController)
+        }
+        // Tela de Utilização de Veículos que agora recebe os parâmetros Placa e Modelo
+        composable(
+            route = "utilizacao_de_veiculos/{placa}/{modelo}",
+            arguments = listOf(
+                navArgument("placa") { type = NavType.StringType },
+                navArgument("modelo") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val placa = backStackEntry.arguments?.getString("placa") ?: ""
+            val modelo = backStackEntry.arguments?.getString("modelo") ?: ""
+            VistoriaVeiculosScreen(navController, placa, modelo)
+        }
         composable("tela_4") { ExScreen(navController) }
         composable("ex_1") { Ex1(navController) }
         composable("ex_2") { Ex2(navController) }
