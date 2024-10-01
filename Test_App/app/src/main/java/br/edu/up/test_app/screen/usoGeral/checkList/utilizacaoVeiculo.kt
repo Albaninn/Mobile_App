@@ -37,25 +37,14 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
         ChecklistSection("Seção 5: Verificação de Documentos", listOf("Documento CRLV", "Manual do Proprietário"))
     )
 
-    // "Seção Veículo" que deve sempre ficar visível
-    val vehicleSection = ChecklistSection("Seção Veículo: ", listOf("Placa", "Modelo do veículo"))
-
     // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item (somente para seções obrigatórias)
-    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.flatMap { it.questions }.size + vehicleSection.questions.size) { -1 }) }
+    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.flatMap { it.questions }.size) { -1 }) }
 
     // Usar estado para armazenar se a seção está expandida ou não
-    val expandedStates = remember { mutableStateListOf(*Array(expandableSections.size + 1) { false }) }
+    val expandedStates = remember { mutableStateListOf(*Array(expandableSections.size) { false }) }
 
-    // Estados para armazenar o valor da placa e do modelo (obrigatórios)
-    var plateText by remember { mutableStateOf("") }
-    var modelText by remember { mutableStateOf("") }
-
-    // Lista de imagens associadas às reprovações
-    val reprovadoImages = remember { mutableStateListOf<Bitmap?>(null, null, null, null, null) }
-
-    // Verificar se todas as perguntas das seções obrigatórias foram respondidas (Veículo + Seções 1 a 5)
-    val allItemsAnswered = approvalStates.take(approvalStates.size).all { it != -1 } // Apenas as perguntas obrigatórias
-    val allTextFieldsFilled = plateText.isNotBlank() && modelText.isNotBlank() // Apenas Placa e Modelo são obrigatórios
+    // Verificar se todas as perguntas das seções obrigatórias foram respondidas (Seções 1 a 5)
+    val allItemsAnswered = approvalStates.all { it != -1 } // Apenas as perguntas obrigatórias
 
     // Variável para controlar o estado do diálogo de confirmação
     var showDialog by remember { mutableStateOf(false) }
@@ -64,11 +53,7 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
     // Launcher para tirar foto
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) {
-            // Associar a imagem à reprovação correspondente
-            val index = reprovadoImages.indexOfFirst { it == null }
-            if (index != -1) {
-                reprovadoImages[index] = bitmap
-            }
+            // Lógica para lidar com a imagem tirada
         }
     }
 
@@ -96,31 +81,6 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Seção "Veículo" sempre visível com campos de texto para Placa e Modelo (obrigatórios)
-            item {
-                Text(
-                    text = vehicleSection.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = plateText,
-                        onValueChange = { plateText = it },
-                        label = { Text("Placa") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = modelText,
-                        onValueChange = { modelText = it },
-                        label = { Text("Modelo do Veículo") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
             // Outras seções obrigatórias (seções 1 a 5)
             expandableSections.forEachIndexed { sectionIndex, section ->
                 item {
@@ -178,7 +138,7 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             item {
                 Button(
                     onClick = {
-                        if (!allItemsAnswered || !allTextFieldsFilled) {
+                        if (!allItemsAnswered) {
                             showIncompleteDialog = true // Exibir o diálogo se o checklist estiver incompleto
                         } else {
                             showDialog = true // Exibir o diálogo de checklist completo
@@ -200,7 +160,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             title = "Checklist Completo",
             message = "O checklist foi preenchido e enviado com sucesso. Deseja fazer o download do documento?",
             onDismiss = { showDialog = false },
-            onDownload = {
+            confirmButtonLabel = "Download",
+            dismissButtonLabel = "Não",
+            onConfirm = {
                 showDialog = false
                 // Lógica de download
             }
@@ -213,7 +175,9 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             title = "Checklist Incompleto",
             message = "O checklist ainda não está completo. Deseja continuar assim mesmo?",
             onDismiss = { showIncompleteDialog = false },
-            onDownload = {
+            confirmButtonLabel = "Continuar",
+            dismissButtonLabel = "Cancelar",
+            onConfirm = {
                 showIncompleteDialog = false
                 // Lógica de continuar mesmo com checklist incompleto
             }
@@ -289,19 +253,26 @@ fun ChecklistItemWithApproval(
 }
 
 @Composable
-fun ConfirmationDialog(title: String, message: String, onDismiss: () -> Unit, onDownload: () -> Unit) {
+fun ConfirmationDialog(
+    title: String,
+    message: String,
+    confirmButtonLabel: String,
+    dismissButtonLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {
-            Button(onClick = onDownload) {
-                Text("Continuar")
+            Button(onClick = onConfirm) {
+                Text(confirmButtonLabel)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(dismissButtonLabel)
             }
         }
     )
