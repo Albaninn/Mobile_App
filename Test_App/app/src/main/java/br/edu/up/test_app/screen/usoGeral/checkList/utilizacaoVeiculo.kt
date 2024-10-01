@@ -53,11 +53,13 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
     // Lista de imagens associadas às reprovações
     val reprovadoImages = remember { mutableStateListOf<Bitmap?>(null, null, null, null, null) }
 
+    // Verificar se todas as perguntas das seções obrigatórias foram respondidas (Veículo + Seções 1 a 5)
+    val allItemsAnswered = approvalStates.take(approvalStates.size).all { it != -1 } // Apenas as perguntas obrigatórias
+    val allTextFieldsFilled = plateText.isNotBlank() && modelText.isNotBlank() // Apenas Placa e Modelo são obrigatórios
+
     // Variável para controlar o estado do diálogo de confirmação
     var showDialog by remember { mutableStateOf(false) }
-
-    // Variável para controlar se o checklist está incompleto
-    var isIncomplete by remember { mutableStateOf(false) }
+    var showIncompleteDialog by remember { mutableStateOf(false) }
 
     // Launcher para tirar foto
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
@@ -176,15 +178,10 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             item {
                 Button(
                     onClick = {
-                        // Verificar se o checklist está completo
-                        val allItemsAnswered = approvalStates.all { it != -1 }
-                        val allTextFieldsFilled = plateText.isNotBlank() && modelText.isNotBlank()
-
-                        if (allItemsAnswered && allTextFieldsFilled) {
-                            showDialog = true // Exibir o diálogo de confirmação
+                        if (!allItemsAnswered || !allTextFieldsFilled) {
+                            showIncompleteDialog = true // Exibir o diálogo se o checklist estiver incompleto
                         } else {
-                            isIncomplete = true // Marcar como incompleto
-                            showDialog = true // Exibir o diálogo mesmo assim
+                            showDialog = true // Exibir o diálogo de checklist completo
                         }
                     },
                     modifier = Modifier
@@ -197,25 +194,30 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
         }
     }
 
-    // Exibir o diálogo de confirmação ou aviso de incompletude
+    // Exibir o diálogo de confirmação após concluir (checklist completo)
     if (showDialog) {
-        if (isIncomplete) {
-            IncompleteChecklistDialog(
-                onDismiss = { showDialog = false },
-                onProceed = {
-                    showDialog = false
-                    // Prosseguir com a conclusão sem terminar de preencher
-                }
-            )
-        } else {
-            ConfirmationDialog(
-                onDismiss = { showDialog = false },
-                onDownload = {
-                    showDialog = false
-                    // Lógica de download
-                }
-            )
-        }
+        ConfirmationDialog(
+            title = "Checklist Completo",
+            message = "O checklist foi preenchido e enviado com sucesso. Deseja fazer o download do documento?",
+            onDismiss = { showDialog = false },
+            onDownload = {
+                showDialog = false
+                // Lógica de download
+            }
+        )
+    }
+
+    // Exibir o diálogo de checklist incompleto
+    if (showIncompleteDialog) {
+        ConfirmationDialog(
+            title = "Checklist Incompleto",
+            message = "O checklist ainda não está completo. Deseja continuar assim mesmo?",
+            onDismiss = { showIncompleteDialog = false },
+            onDownload = {
+                showIncompleteDialog = false
+                // Lógica de continuar mesmo com checklist incompleto
+            }
+        )
     }
 }
 
@@ -287,32 +289,13 @@ fun ChecklistItemWithApproval(
 }
 
 @Composable
-fun ConfirmationDialog(onDismiss: () -> Unit, onDownload: () -> Unit) {
+fun ConfirmationDialog(title: String, message: String, onDismiss: () -> Unit, onDownload: () -> Unit) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text("Checklist Enviado") },
-        text = { Text("O checklist foi enviado com sucesso. Deseja fazer o download do documento?") },
+        title = { Text(title) },
+        text = { Text(message) },
         confirmButton = {
             Button(onClick = onDownload) {
-                Text("Fazer Download")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        }
-    )
-}
-
-@Composable
-fun IncompleteChecklistDialog(onDismiss: () -> Unit, onProceed: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text("Checklist Incompleto") },
-        text = { Text("O checklist ainda não está completo. Deseja continuar assim mesmo?") },
-        confirmButton = {
-            Button(onClick = onProceed) {
                 Text("Continuar")
             }
         },
