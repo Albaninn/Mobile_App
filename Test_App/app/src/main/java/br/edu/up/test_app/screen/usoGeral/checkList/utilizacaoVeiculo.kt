@@ -28,40 +28,36 @@ data class ChecklistSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UtilizacaoVeiculosScreen(navController: NavHostController) {
-    // Definir as 6 seções que podem ser expandidas/recolhidas
+    // Definir as 5 seções obrigatórias que podem ser expandidas/recolhidas
     val expandableSections = listOf(
         ChecklistSection("Seção 1: Verificação de Luzes", listOf("Farol Dianteiro", "Setas Dianteiras", "Farol Traseiro", "Setas Traseiras", "Luz de Freio")),
         ChecklistSection("Seção 2: Verificação da Mecânica", listOf("Nível de Óleo do motor", "Nível de Água", "Nível de água da Bateria", "Pneus Dianteiros", "Pneus Traseiros", "Estepe", "Macaco", "Chave de Roda", "Triângulo de sinalização")),
         ChecklistSection("Seção 3: Verificação de Lataria", listOf("Frontal", "Lateral Direita", "Traseira", "Lateral Esquerda", "Teto")),
         ChecklistSection("Seção 4: Verificação de Vidros", listOf("Para-brisa", "Janelas Lateral Direita", "Vigia", "Janela Lateral Esquerda")),
-        ChecklistSection("Seção 5: Verificação de Documentos", listOf("Documento CRLV", "Manual do Proprietário")),
-        ChecklistSection("Seção 6: Observações", listOf("Observações")) // Não obrigatória
+        ChecklistSection("Seção 5: Verificação de Documentos", listOf("Documento CRLV", "Manual do Proprietário"))
     )
 
     // "Seção Veículo" que deve sempre ficar visível
     val vehicleSection = ChecklistSection("Seção Veículo: ", listOf("Placa", "Modelo do veículo"))
 
-    // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item das seções obrigatórias
-    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.take(5).flatMap { it.questions }.size + vehicleSection.questions.size) { -1 }) }
+    // Usar estado para armazenar a seleção de "Aprovado" ou "Reprovado" para cada item (somente para seções obrigatórias)
+    val approvalStates = remember { mutableStateListOf(*Array(expandableSections.flatMap { it.questions }.size + vehicleSection.questions.size) { -1 }) }
 
     // Usar estado para armazenar se a seção está expandida ou não
-    val expandedStates = remember { mutableStateListOf(*Array(expandableSections.size) { false }) }
+    val expandedStates = remember { mutableStateListOf(*Array(expandableSections.size + 1) { false }) }
 
-    // Estados para armazenar o valor da placa e do modelo (obrigatórios) e observações (não obrigatórias)
+    // Estados para armazenar o valor da placa e do modelo (obrigatórios)
     var plateText by remember { mutableStateOf("") }
     var modelText by remember { mutableStateOf("") }
-    var observationsText by remember { mutableStateOf("") }
 
     // Lista de imagens associadas às reprovações
     val reprovadoImages = remember { mutableStateListOf<Bitmap?>(null, null, null, null, null) }
 
-    // Verificar se todas as perguntas das seções obrigatórias foram respondidas (Veículo + Seções 1 a 5)
-    val allItemsAnswered = approvalStates.all { it != -1 }
-    val allTextFieldsFilled = plateText.isNotBlank() && modelText.isNotBlank() // Apenas Placa e Modelo são obrigatórios
-    val allAnswered = allItemsAnswered && allTextFieldsFilled
-
     // Variável para controlar o estado do diálogo de confirmação
     var showDialog by remember { mutableStateOf(false) }
+
+    // Variável para controlar se o checklist está incompleto
+    var isIncomplete by remember { mutableStateOf(false) }
 
     // Launcher para tirar foto
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
@@ -124,7 +120,7 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
             }
 
             // Outras seções obrigatórias (seções 1 a 5)
-            expandableSections.take(5).forEachIndexed { sectionIndex, section ->
+            expandableSections.forEachIndexed { sectionIndex, section ->
                 item {
                     var hasReprovado by remember { mutableStateOf(false) }
 
@@ -176,52 +172,21 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
                 }
             }
 
-            // Seção "Observações" (não obrigatória)
-            expandableSections.last().let { section ->
-                item {
-                    val sectionIndex = expandableSections.size - 1
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                expandedStates[sectionIndex] = !expandedStates[sectionIndex]
-                            }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = section.title,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Icon(
-                            painter = painterResource(id = if (expandedStates[sectionIndex]) R.drawable.arrowup else R.drawable.arrowdown),
-                            contentDescription = if (expandedStates[sectionIndex]) "Recolher" else "Expandir"
-                        )
-                    }
-
-                    if (expandedStates[sectionIndex]) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = observationsText,
-                                onValueChange = { observationsText = it },
-                                label = { Text("Observações") },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-            }
-
             // Botão para concluir checklist
             item {
                 Button(
                     onClick = {
-                        showDialog = true // Exibir o diálogo de confirmação ao concluir
+                        // Verificar se o checklist está completo
+                        val allItemsAnswered = approvalStates.all { it != -1 }
+                        val allTextFieldsFilled = plateText.isNotBlank() && modelText.isNotBlank()
+
+                        if (allItemsAnswered && allTextFieldsFilled) {
+                            showDialog = true // Exibir o diálogo de confirmação
+                        } else {
+                            isIncomplete = true // Marcar como incompleto
+                            showDialog = true // Exibir o diálogo mesmo assim
+                        }
                     },
-                    enabled = allAnswered,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -232,18 +197,29 @@ fun UtilizacaoVeiculosScreen(navController: NavHostController) {
         }
     }
 
-    // Exibir o diálogo de confirmação após concluir
+    // Exibir o diálogo de confirmação ou aviso de incompletude
     if (showDialog) {
-        ConfirmationDialog(
-            onDismiss = { showDialog = false },
-            onDownload = {
-                showDialog = false
-                // Lógica de download
-            }
-        )
+        if (isIncomplete) {
+            IncompleteChecklistDialog(
+                onDismiss = { showDialog = false },
+                onProceed = {
+                    showDialog = false
+                    // Prosseguir com a conclusão sem terminar de preencher
+                }
+            )
+        } else {
+            ConfirmationDialog(
+                onDismiss = { showDialog = false },
+                onDownload = {
+                    showDialog = false
+                    // Lógica de download
+                }
+            )
+        }
     }
 }
 
+// Função para calcular a posição global dos índices
 fun sectionsTakeTotalQuestions(take: Int, sections: List<ChecklistSection>): Int {
     return sections.take(take).sumOf { it.questions.size }
 }
@@ -319,6 +295,25 @@ fun ConfirmationDialog(onDismiss: () -> Unit, onDownload: () -> Unit) {
         confirmButton = {
             Button(onClick = onDownload) {
                 Text("Fazer Download")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+fun IncompleteChecklistDialog(onDismiss: () -> Unit, onProceed: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text("Checklist Incompleto") },
+        text = { Text("O checklist ainda não está completo. Deseja continuar assim mesmo?") },
+        confirmButton = {
+            Button(onClick = onProceed) {
+                Text("Continuar")
             }
         },
         dismissButton = {
